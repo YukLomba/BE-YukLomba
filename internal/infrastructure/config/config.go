@@ -1,14 +1,16 @@
 package config
 
 import (
+	"log"
 	"os"
-	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	AppPort    int
+	AppPort    string
 	DBHost     string
-	DBPort     int
+	DBPort     string
 	DBUser     string
 	DBPassword string
 	DBName     string
@@ -25,13 +27,17 @@ func getEnv(key string, defaultValue string) string {
 }
 
 func LoadConfig() *Config {
-	appPort, _ := strconv.Atoi(getEnv("APP_PORT", "8080"))
-	dbPort, _ := strconv.Atoi(getEnv("DB_PORT", "3306"))
+
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	return &Config{
-		AppPort:    appPort,
+		AppPort:    getEnv("APP_PORT", "8080"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     dbPort,
+		DBPort:     getEnv("DB_PORT", "3306"),
 		DBUser:     getEnv("DB_USER", "root"),
 		DBPassword: getEnv("DB_PASS", ""),
 		DBName:     getEnv("DB_NAME", "go_fiber_clean_arch"),
