@@ -8,7 +8,7 @@ import (
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/router"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/config"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/database"
-	seeder "github.com/YukLomba/BE-YukLomba/internal/infrastructure/database/seed"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/database/seeder"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/repository"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
