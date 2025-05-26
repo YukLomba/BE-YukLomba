@@ -17,6 +17,26 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 	}
 }
 
+// FindByEmail implements repository.UserRepository.
+func (r userRepository) FindByEmail(email string) (*entity.User, error) {
+	var user entity.User
+	result := r.db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
+// FindByUsername implements repository.UserRepository.
+func (r userRepository) FindByUsername(username string) (*entity.User, error) {
+	var user entity.User
+	result := r.db.Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &user, nil
+}
+
 // FindAllRegistration implements repository.UserRepository.
 func (r userRepository) FindAllRegistration(id uuid.UUID) ([]*entity.Registration, error) {
 	var registrations []*entity.Registration

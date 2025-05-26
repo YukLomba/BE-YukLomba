@@ -11,4 +11,6 @@ type UserRepository interface {
 	Create(user *entity.User) error
 	Update(user *entity.User) error
 	FindAllRegistration(id uuid.UUID) ([]*entity.Registration, error)
+	FindByEmail(email string) (*entity.User, error)
+	FindByUsername(username string) (*entity.User, error)
 }

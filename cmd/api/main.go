@@ -12,6 +12,8 @@ import (
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/repository"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func main() {
@@ -33,18 +35,30 @@ func main() {
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	competitionService := service.NewCompetitionService(competitionRepo)
+	authService := service.NewAuthService(userRepo, cfg)
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)
 	competitionController := controller.NewCompetitionController(competitionService)
+	authController := controller.NewAuthController(authService)
 
 	app := fiber.New()
+
+	// Middleware
+	app.Use(logger.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowMethods:     "GET,POST,PUT,DELETE",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowCredentials: true,
+	}))
 
 	api := app.Group("/api")
 
 	// Setup routes
 	router.SetupUserRoute(api, userController)
 	router.SetupCompetitionRoute(api, competitionController)
+	router.SetupAuthRoute(api, authController, authService)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.AppPort))
 }
