@@ -1,7 +1,9 @@
 package controller
 
 import (
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -115,7 +117,7 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	user := new(entity.User)
+	user := new(dto.UserProfileUpdate)
 
 	if err := c.BodyParser(user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -124,6 +126,13 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	user.ID = parsedID
+
+	if err := util.ValidateStruct(user); err != nil {
+		errors := util.GenerateValidationErrorMessage(err)
+		return c.Status(400).JSON(fiber.Map{
+			"errors": errors, // Direct usage, no dereferencing needed
+		})
+	}
 
 	if err := h.userService.UpdateUser(user); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
