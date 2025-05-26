@@ -24,5 +24,11 @@ func SeedAll(db *gorm.DB) {
 		log.Println("Competitions seeded successfully")
 	}
 
+	if err := SeedUserCompetition(db); err != nil {
+		log.Printf("Error seeding Registration: %v\n", err)
+	} else {
+		log.Println("Regsitration seeded successfully")
+	}
+
 	log.Println("Seeding completed")
 }
