@@ -1,56 +1,50 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"log"
 
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/controller"
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/router"
-	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/config"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/database"
+	seeder "github.com/YukLomba/BE-YukLomba/internal/infrastructure/database/seed"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/repository"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func main() {
+	// Define command line flags
+	seedFlag := flag.Bool("seed", false, "Seed the database with sample data")
+	flag.Parse()
 
 	cfg := config.LoadConfig()
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-		cfg.DBHost, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBPort)
-
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+	db := database.Init(cfg)
+	database.Migrate(db)
+	if *seedFlag {
+		seeder.SeedAll(db)
 	}
 
-	db.AutoMigrate(
-		&entity.User{},
-		&entity.Competition{},
-		&entity.Registration{},
-	)
-
-	err = db.SetupJoinTable(&entity.User{}, "JoinedCompetitions", &entity.Registration{})
-
-	if err != nil {
-		log.Fatalf("Failed to set up join table: %v", err)
-	}
-
+	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
+	competitionRepo := repository.NewCompetitionRepository(db)
 
+	// Initialize services
 	userService := service.NewUserService(userRepo)
+	competitionService := service.NewCompetitionService(competitionRepo)
 
+	// Initialize controllers
 	userController := controller.NewUserController(userService)
+	competitionController := controller.NewCompetitionController(competitionService)
 
 	app := fiber.New()
 
 	api := app.Group("/api")
 
+	// Setup routes
 	router.SetupUserRoute(api, userController)
+	router.SetupCompetitionRoute(api, competitionController)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.AppPort))
 }

@@ -1,6 +1,6 @@
 module github.com/YukLomba/BE-YukLomba
 
-go 1.24.1
+go 1.23.9
 
 require github.com/gofiber/fiber/v2 v2.52.6
 

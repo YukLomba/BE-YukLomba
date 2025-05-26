@@ -10,7 +10,9 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func ConnectDatabase(config *config.Config) *gorm.DB {
+var DB *gorm.DB
+
+func Init(config *config.Config) *gorm.DB {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Jakarta",
 		config.DBHost,

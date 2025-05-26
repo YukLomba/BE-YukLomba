@@ -37,9 +37,9 @@ func LoadConfig() *Config {
 	return &Config{
 		AppPort:    getEnv("APP_PORT", "8080"),
 		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "3306"),
+		DBPort:     getEnv("DB_PORT", "5432"),
 		DBUser:     getEnv("DB_USER", "root"),
 		DBPassword: getEnv("DB_PASS", ""),
-		DBName:     getEnv("DB_NAME", "go_fiber_clean_arch"),
+		DBName:     getEnv("DB_NAME", "yuk_lomba"),
 	}
 }
