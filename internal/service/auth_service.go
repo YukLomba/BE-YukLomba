@@ -18,6 +18,7 @@ type AuthService interface {
 	Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
 	GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenResponse, error)
 	ValidateToken(token string) (*util.JWTClaims, error)
+	CompleteRegistration(userID uuid.UUID, role string) (*entity.User, error)
 }
 
 // AuthServiceImpl implements the AuthService interface
@@ -55,14 +56,17 @@ func (s *AuthServiceImpl) Register(req *dto.RegisterRequest) (*entity.User, erro
 	}
 
 	// Set default role
-	role := "user"
+	role := "pending"
+	if req.Role != nil {
+		role = *req.Role
+	}
 
 	// Create user
 	user := &entity.User{
 		Username:   req.Username,
 		Email:      req.Email,
 		Password:   hashedPassword,
-		Role:       &role,
+		Role:       role,
 		University: req.University,
 		Interests:  req.Interests,
 	}
@@ -115,7 +119,7 @@ func (s *AuthServiceImpl) GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenRes
 	if err != nil {
 		// Create new user if not exists
 		username := strings.Split(googleUser.Email, "@")[0]
-		role := "user"
+		role := "pending"
 
 		// Generate random password for OAuth users
 		randomPassword, err := uuid.NewRandom()
@@ -132,7 +136,7 @@ func (s *AuthServiceImpl) GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenRes
 			Username: username,
 			Email:    googleUser.Email,
 			Password: hashedPassword,
-			Role:     &role,
+			Role:     role,
 		}
 
 		if err := s.userRepo.Create(user); err != nil {
@@ -152,6 +156,32 @@ func (s *AuthServiceImpl) GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenRes
 		TokenType:   "Bearer",
 		ExpiresIn:   expiresIn,
 	}, nil
+}
+
+func (s *AuthServiceImpl) CompleteRegistration(userID uuid.UUID, role string) (*entity.User, error) {
+	// Validate role
+	if role != "student" && role != "organizer" {
+		return nil, errors.New("invalid role, must be 'student' or 'organizer'")
+	}
+
+	// Find the user by ID
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Update role
+	user.Role = role
+
+	// Save updated user
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // ValidateToken validates a JWT token

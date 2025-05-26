@@ -15,6 +15,7 @@ func SetupAuthRoute(router fiber.Router, authController *controller.AuthControll
 	auth.Post("/register", authController.Register)
 	auth.Post("/login", authController.Login)
 	auth.Post("/google", authController.GoogleLogin)
+	auth.Post("/complete-registration", authController.CompleteRegistration)
 
 	// Protected routes
 	auth.Get("/profile", middleware.AuthMiddleware(authService), authController.GetProfile)

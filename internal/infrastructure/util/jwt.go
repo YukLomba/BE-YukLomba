@@ -25,10 +25,7 @@ func GenerateToken(user *entity.User, jwtSecret string) (string, int64, error) {
 	expiresIn := expirationTime.Unix() - time.Now().Unix()
 
 	// Set role to "user" if it's nil
-	role := "user"
-	if user.Role != nil {
-		role = *user.Role
-	}
+	role := user.Role
 
 	// Create claims
 	claims := &JWTClaims{

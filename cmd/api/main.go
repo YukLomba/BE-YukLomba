@@ -20,10 +20,15 @@ func main() {
 	// Define command line flags
 	seedFlag := flag.Bool("seed", false, "Seed the database with sample data")
 	migrateFlag := flag.Bool("migrate", false, "Migrate the database schema")
+	freshFlag := flag.Bool("fresh", false, "Drop and recreate the database")
 	flag.Parse()
 
 	cfg := config.LoadConfig()
 	db := database.Init(cfg)
+
+	if *freshFlag {
+		database.DropAllTables(db)
+	}
 	if *migrateFlag {
 		database.Migrate(db)
 	}
@@ -42,7 +47,7 @@ func main() {
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)
-	competitionController := controller.NewCompetitionController(competitionService)
+	competitionController := controller.NewCompetitionController(competitionService, userService)
 	authController := controller.NewAuthController(authService)
 
 	app := fiber.New()
@@ -59,8 +64,8 @@ func main() {
 	api := app.Group("/api")
 
 	// Setup routes
-	router.SetupUserRoute(api, userController)
-	router.SetupCompetitionRoute(api, competitionController)
+	router.SetupUserRoute(api, userController, authService)
+	router.SetupCompetitionRoute(api, competitionController, authService)
 	router.SetupAuthRoute(api, authController, authService)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.AppPort))

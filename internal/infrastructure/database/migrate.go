@@ -16,3 +16,7 @@ func Migrate(db *gorm.DB) {
 		log.Fatalf("❌ Failed to migrate: %v", err)
 	}
 }
+
+func DropAllTables(db *gorm.DB) {
+	db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+}

@@ -8,11 +8,16 @@ type LoginRequest struct {
 
 // RegisterRequest represents the registration request data
 type RegisterRequest struct {
-	Username   string `json:"username"`
-	Email      string `json:"email"`
-	Password   string `json:"password"`
-	University string `json:"university"`
-	Interests  string `json:"interests"`
+	Username   string  `json:"username"`
+	Email      string  `json:"email"`
+	Password   string  `json:"password"`
+	University string  `json:"university"`
+	Interests  string  `json:"interests"`
+	Role       *string `json:"role"`
+}
+
+type CompleteRegistrationRequest struct {
+	Role string `json:"role" binding:"required"`
 }
 
 // TokenResponse represents the authentication token response

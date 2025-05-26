@@ -36,6 +36,12 @@ func AuthMiddleware(authService service.AuthService) fiber.Handler {
 			})
 		}
 
+		if claims.Role == "pending" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "User registration is pending",
+			})
+		}
+
 		// Set user information in the context
 		c.Locals("user_id", claims.UserID)
 		c.Locals("email", claims.Email)
