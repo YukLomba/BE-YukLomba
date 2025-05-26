@@ -19,11 +19,14 @@ import (
 func main() {
 	// Define command line flags
 	seedFlag := flag.Bool("seed", false, "Seed the database with sample data")
+	migrateFlag := flag.Bool("migrate", false, "Migrate the database schema")
 	flag.Parse()
 
 	cfg := config.LoadConfig()
 	db := database.Init(cfg)
-	database.Migrate(db)
+	if *migrateFlag {
+		database.Migrate(db)
+	}
 	if *seedFlag {
 		seeder.SeedAll(db)
 	}
@@ -50,7 +53,7 @@ func main() {
 		AllowOrigins:     "*",
 		AllowMethods:     "GET,POST,PUT,DELETE",
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
-		AllowCredentials: true,
+		AllowCredentials: false,
 	}))
 
 	api := app.Group("/api")
