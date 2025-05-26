@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
@@ -10,7 +11,7 @@ type UserService interface {
 	GetUser(id uuid.UUID) (*entity.User, error)
 	GetAllUsers() ([]*entity.User, error)
 	CreateUser(user *entity.User) error
-	UpdateUser(user *entity.User) error
+	UpdateUser(userID uuid.UUID, req *dto.UserProfileUpdate) error
 	GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error)
 }
 
@@ -45,6 +46,12 @@ func (u *UserServiceImpl) GetUser(id uuid.UUID) (*entity.User, error) {
 }
 
 // UpdateUser implements UserService.
-func (u *UserServiceImpl) UpdateUser(user *entity.User) error {
+func (u *UserServiceImpl) UpdateUser(userID uuid.UUID, req *dto.UserProfileUpdate) error {
+	user := &entity.User{
+		ID:       userID,
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+	}
 	return u.userRepo.Update(user)
 }
