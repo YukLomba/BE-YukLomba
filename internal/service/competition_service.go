@@ -13,6 +13,7 @@ type CompetitionService interface {
 	CreateCompetition(competition *dto.CompetitionCreateRequest) error
 	UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error
 	DeleteCompetition(id uuid.UUID) error
+	RegisterUserToCompetition(userID uuid.UUID, competitionID uuid.UUID) error
 	GetCompetitionsByOrganizer(organizerID uuid.UUID) (*dto.CompetitionListResponse, error)
 }
 
@@ -124,4 +125,13 @@ func (s *CompetitionServiceImpl) toCompetitionResponse(competition *entity.Compe
 		CreatedAt: competition.CreatedAt,
 		UpdatedAt: competition.UpdatedAt,
 	}
+}
+
+// RegisterUserToCompetition implements CompetitionService.
+func (s *CompetitionServiceImpl) RegisterUserToCompetition(userID uuid.UUID, competitionID uuid.UUID) error {
+	registration := &entity.Registration{
+		UserID:        userID,
+		CompetitionID: competitionID,
+	}
+	return s.competitionRepo.CreateUserRegistration(registration)
 }

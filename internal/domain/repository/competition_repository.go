@@ -11,5 +11,6 @@ type CompetitionRepository interface {
 	Create(competition *entity.Competition) error
 	Update(competition *entity.Competition) error
 	Delete(id uuid.UUID) error
+	CreateUserRegistration(registration *entity.Registration) error
 	FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error)
 }

@@ -75,3 +75,8 @@ func (r *competitionRepository) FindByOrganizerID(organizerID uuid.UUID) ([]*ent
 	}
 	return competitions, nil
 }
+
+// RegisterUserToCompetition implements repository.CompetitionRepository.
+func (r *competitionRepository) CreateUserRegistration(registration *entity.Registration) error {
+	return r.db.Create(registration).Error
+}

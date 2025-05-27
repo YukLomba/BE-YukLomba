@@ -196,3 +196,22 @@ func (c *CompetitionController) GetCompetitionsByOrganizer(ctx *fiber.Ctx) error
 
 	return ctx.JSON(fiber.Map{"data": competitions})
 }
+
+func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {
+	competitionID, err := parseUUIDParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	user, err := c.getUserFromCtx(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	if err := c.competitionService.RegisterUserToCompetition(user.ID, competitionID); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to register for competition"})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Successfully registered for competition"})
+}
