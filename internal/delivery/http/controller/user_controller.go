@@ -82,24 +82,6 @@ func (h *UserController) GetAllUserPastCompetition(c *fiber.Ctx) error {
 	return c.JSON(pastCompetition)
 }
 
-// func (h *UserController) CreateUser(c *fiber.Ctx) error {
-// 	user := new(entity.User)
-
-// 	if err := c.BodyParser(user); err != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-// 			"error": "Invalid request body",
-// 		})
-// 	}
-
-// 	if err := h.userService.CreateUser(user); err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-// 			"error": "Failed to create user",
-// 		})
-// 	}
-
-// 	return c.Status(fiber.StatusCreated).JSON(user)
-// }
-
 func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {

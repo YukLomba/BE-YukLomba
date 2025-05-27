@@ -11,7 +11,6 @@ func SetupUserRoute(router fiber.Router, userController *controller.UserControll
 	users := router.Group("/users", middleware.AuthMiddleware(authService))
 	users.Get("/", userController.GetAllUsers, middleware.RoleMiddleware("admin"))
 	users.Get("/:id", userController.GetUser)
-	users.Get("/:id/registration", userController.GetAllUserPastCompetition)
+	users.Get("/:id/registrations", userController.GetAllUserPastCompetition)
 	users.Put("/:id", userController.UpdateUser)
-	// users.Post("/", userController.CreateUser)
 }
