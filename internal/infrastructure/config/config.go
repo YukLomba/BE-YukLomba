@@ -5,18 +5,31 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
+type DB struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
+}
+
+type Server struct {
+	Port string
+}
+
+type Auth struct {
+	JWTSecret string
+	*oauth2.Config
+}
+
 type Config struct {
-	AppPort            string
-	DBHost             string
-	DBPort             string
-	DBUser             string
-	DBPassword         string
-	DBName             string
-	JWTSecret          string
-	GoogleClientID     string
-	GoogleClientSecret string
+	Server
+	DB
+	Auth
 }
 
 func getEnv(key string, defaultValue string) string {
@@ -29,23 +42,37 @@ func getEnv(key string, defaultValue string) string {
 	return value
 }
 
-func LoadConfig() *Config {
+func LoadConfig() (*Config, error) {
 
 	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatal("Error loading .env file")
+		return nil, err
 	}
-
 	return &Config{
-		AppPort:            getEnv("APP_PORT", "8080"),
-		DBHost:             getEnv("DB_HOST", "localhost"),
-		DBPort:             getEnv("DB_PORT", "5432"),
-		DBUser:             getEnv("DB_USER", "root"),
-		DBPassword:         getEnv("DB_PASS", ""),
-		DBName:             getEnv("DB_NAME", "yuk_lomba"),
-		JWTSecret:          getEnv("JWT_SECRET", "super_duper_secured_secret"),
-		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
-		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
-	}
+		Server: Server{
+			Port: getEnv("SERVER_PORT", "8080"),
+		},
+		DB: DB{
+			Host:     getEnv("DB_HOST", "localhost"),
+			Port:     getEnv("DB_PORT", "5432"),
+			User:     getEnv("DB_USER", "postgres"),
+			Password: getEnv("DB_PASS", "postgres"),
+			Name:     getEnv("DB_NAME", "yuklomba"),
+		},
+		Auth: Auth{
+			JWTSecret: getEnv("JWT_SECRET", "secret"),
+			Config: &oauth2.Config{
+				ClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
+				ClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
+				RedirectURL:  getEnv("GOOGLE_REDIRECT_URL", ""),
+				Scopes: []string{
+					"https://www.googleapis.com/auth/userinfo.email",
+					"https://www.googleapis.com/auth/userinfo.profile",
+				},
+				Endpoint: google.Endpoint,
+			},
+		},
+	}, nil
 }

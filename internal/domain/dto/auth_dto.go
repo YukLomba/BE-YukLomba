@@ -31,3 +31,17 @@ type TokenResponse struct {
 type GoogleAuthRequest struct {
 	IdToken string `json:"id_token"`
 }
+
+type GoogleAuthCallbackRequest struct {
+	Code  string `form:"code" json:"code" binding:"required"`
+	State string `form:"state" json:"state"`
+}
+
+type GoogleTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	RefreshToken string `json:"refresh_token"`
+	Scope        string `json:"scope"`
+	TokenType    string `json:"token_type"`
+	IDToken      string `json:"id_token"`
+}

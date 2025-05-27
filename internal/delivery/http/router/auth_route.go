@@ -14,7 +14,8 @@ func SetupAuthRoute(router fiber.Router, authController *controller.AuthControll
 	// Public routes
 	auth.Post("/register", authController.Register)
 	auth.Post("/login", authController.Login)
-	auth.Post("/google", authController.GoogleLogin)
+	auth.Get("/google", authController.GoogleAuth)
+	auth.Get("/google/callback", authController.GoogleCallback)
 	auth.Post("/complete-registration", authController.CompleteRegistration)
 
 	// Protected routes

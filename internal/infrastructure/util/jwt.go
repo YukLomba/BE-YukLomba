@@ -19,13 +19,12 @@ type JWTClaims struct {
 }
 
 // GenerateToken generates a new JWT token for the given user
-func GenerateToken(user *entity.User, jwtSecret string) (string, int64, error) {
-	// Set token expiration time (e.g., 24 hours)
-	expirationTime := time.Now().Add(24 * time.Hour)
-	expiresIn := expirationTime.Unix() - time.Now().Unix()
+func GenerateToken(user *entity.User, jwtSecret string, expiry time.Duration) (string, int64, error) {
 
 	// Set role to "user" if it's nil
 	role := user.Role
+	expirationTime := time.Now().Add(expiry)
+	expiresIn := expirationTime.Unix() - time.Now().Unix()
 
 	// Create claims
 	claims := &JWTClaims{

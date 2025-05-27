@@ -84,31 +84,32 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 	return ctx.JSON(token)
 }
 
-// GoogleLogin handles Google OAuth2 login
-func (c *AuthController) GoogleLogin(ctx *fiber.Ctx) error {
+// GoogleAuth handles Google OAuth2 authentication
+func (c *AuthController) GoogleAuth(ctx *fiber.Ctx) error {
+	// Get Google OAuth URL
+	url, err := c.authService.GetGoogleOauthUrl()
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get Google OAuth URL",
+		})
+	}
+	// Return redirect URL
+	return ctx.Redirect(url)
+}
+func (c *AuthController) GoogleCallback(ctx *fiber.Ctx) error {
 	// Parse request body
-	req := new(dto.GoogleAuthRequest)
+	req := new(dto.GoogleAuthCallbackRequest)
 	if err := ctx.BodyParser(req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
-
-	// Validate request
-	if req.IdToken == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "ID token is required",
-		})
-	}
-
-	// Login with Google
-	token, err := c.authService.GoogleLogin(req)
+	token, err := c.authService.SignInWithGoogle(req.Code, req.State)
 	if err != nil {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-
 	// Return token
 	return ctx.JSON(token)
 }

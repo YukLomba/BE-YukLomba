@@ -23,8 +23,12 @@ func main() {
 	freshFlag := flag.Bool("fresh", false, "Drop and recreate the database")
 	flag.Parse()
 
-	cfg := config.LoadConfig()
-	db := database.Init(cfg)
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	db := database.Init(cfg.DB)
 
 	if *freshFlag {
 		database.DropAllTables(db)
@@ -44,7 +48,7 @@ func main() {
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	competitionService := service.NewCompetitionService(competitionRepo)
-	authService := service.NewAuthService(userRepo, cfg)
+	authService := service.NewAuthService(userRepo, cfg.Auth)
 	organizationService := service.NewOrganizationService(organizationRepo)
 
 	// Initialize controllers
@@ -72,5 +76,5 @@ func main() {
 	router.SetupAuthRoute(api, authController, authService)
 	router.SetupOrganizationRoute(api, organizationController, authService)
 
-	app.Listen(fmt.Sprintf(":%s", cfg.AppPort))
+	app.Listen(fmt.Sprintf(":%s", cfg.Server.Port))
 }

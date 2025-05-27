@@ -12,15 +12,16 @@ import (
 
 var DB *gorm.DB
 
-func Init(config *config.Config) *gorm.DB {
+func Init(config config.DB) *gorm.DB {
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s TimeZone=Asia/Jakarta",
-		config.DBHost,
-		config.DBUser,
-		config.DBPassword,
-		config.DBName,
-		config.DBPort,
+		config.Host,
+		config.User,
+		config.Password,
+		config.Name,
+		config.Port,
 	)
+	log.Println(dsn)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),

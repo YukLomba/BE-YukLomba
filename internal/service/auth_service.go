@@ -1,8 +1,9 @@
 package service
 
 import (
+	"context"
 	"errors"
-	"strings"
+	"time"
 
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
@@ -16,7 +17,8 @@ import (
 type AuthService interface {
 	Register(req *dto.RegisterRequest) (*entity.User, error)
 	Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
-	GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenResponse, error)
+	GetGoogleOauthUrl() (string, error)
+	SignInWithGoogle(code string, state string) (*dto.TokenResponse, error)
 	ValidateToken(token string) (*util.JWTClaims, error)
 	CompleteRegistration(userID uuid.UUID, role string) (*entity.User, error)
 }
@@ -24,11 +26,11 @@ type AuthService interface {
 // AuthServiceImpl implements the AuthService interface
 type AuthServiceImpl struct {
 	userRepo repository.UserRepository
-	config   *config.Config
+	config   config.Auth
 }
 
 // NewAuthService creates a new instance of AuthService
-func NewAuthService(userRepo repository.UserRepository, cfg *config.Config) AuthService {
+func NewAuthService(userRepo repository.UserRepository, cfg config.Auth) AuthService {
 	return &AuthServiceImpl{
 		userRepo: userRepo,
 		config:   cfg,
@@ -91,9 +93,10 @@ func (s *AuthServiceImpl) Login(req *dto.LoginRequest) (*dto.TokenResponse, erro
 	if !util.CheckPasswordHash(req.Password, user.Password) {
 		return nil, errors.New("invalid email or password")
 	}
+	expirationTime := time.Duration(24) * time.Hour * 7
 
 	// Generate token
-	token, expiresIn, err := util.GenerateToken(user, s.config.JWTSecret)
+	token, expiresIn, err := util.GenerateToken(user, s.config.JWTSecret, expirationTime)
 	if err != nil {
 		return nil, err
 	}
@@ -106,56 +109,57 @@ func (s *AuthServiceImpl) Login(req *dto.LoginRequest) (*dto.TokenResponse, erro
 	}, nil
 }
 
-// GoogleLogin authenticates a user with Google OAuth2
-func (s *AuthServiceImpl) GoogleLogin(req *dto.GoogleAuthRequest) (*dto.TokenResponse, error) {
-	// Verify Google ID token
-	googleUser, err := util.VerifyGoogleIDToken(req.IdToken, s.config.GoogleClientID)
+func (s *AuthServiceImpl) GetGoogleOauthUrl() (string, error) {
+	expirationTime := time.Duration(5) * time.Minute
+	state, err := util.GenerateOAuthStateJWT(s.config.JWTSecret, expirationTime)
+	if err != nil {
+		return "", err
+	}
+	return s.config.AuthCodeURL(state), nil
+}
+
+func (s *AuthServiceImpl) SignInWithGoogle(code string, state string) (*dto.TokenResponse, error) {
+	_, err := util.ParseOAuthStateJWT(state, s.config.JWTSecret)
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if user exists
-	user, err := s.userRepo.FindByEmail(googleUser.Email)
+	// Exchange code for token
+	oauthToken, err := s.config.Exchange(context.Background(), code)
 	if err != nil {
-		// Create new user if not exists
-		username := strings.Split(googleUser.Email, "@")[0]
-		role := "pending"
-
-		// Generate random password for OAuth users
-		randomPassword, err := uuid.NewRandom()
-		if err != nil {
-			return nil, err
-		}
-
-		hashedPassword, err := util.HashPassword(randomPassword.String())
-		if err != nil {
-			return nil, err
-		}
-
+		return nil, err
+	}
+	userInfo, err := util.GetGoogleUserInfo(context.Background(), oauthToken)
+	if err != nil {
+		return nil, err
+	}
+	// Create user if not exists
+	user, err := s.userRepo.FindByEmail(userInfo.Email)
+	if err != nil {
 		user = &entity.User{
-			Username: username,
-			Email:    googleUser.Email,
-			Password: hashedPassword,
-			Role:     role,
+			Username:   userInfo.GivenName,
+			Email:      userInfo.Email,
+			Password:   "",
+			Role:       "pending",
+			University: "",
+			Interests:  "",
 		}
-
 		if err := s.userRepo.Create(user); err != nil {
 			return nil, err
 		}
 	}
-
 	// Generate token
-	token, expiresIn, err := util.GenerateToken(user, s.config.JWTSecret)
+	expirationTime := time.Duration(24) * time.Hour * 7
+	token, expiresIn, err := util.GenerateToken(user, s.config.JWTSecret, expirationTime)
 	if err != nil {
 		return nil, err
 	}
-
 	// Return token response
 	return &dto.TokenResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
 		ExpiresIn:   expiresIn,
 	}, nil
+
 }
 
 func (s *AuthServiceImpl) CompleteRegistration(userID uuid.UUID, role string) (*entity.User, error) {
