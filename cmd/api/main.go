@@ -39,16 +39,19 @@ func main() {
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	competitionRepo := repository.NewCompetitionRepository(db)
+	organizationRepo := repository.NewOrganizationRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	competitionService := service.NewCompetitionService(competitionRepo)
 	authService := service.NewAuthService(userRepo, cfg)
+	organizationService := service.NewOrganizationService(organizationRepo)
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)
 	competitionController := controller.NewCompetitionController(competitionService, userService)
 	authController := controller.NewAuthController(authService)
+	organizationController := controller.NewOrganizationController(organizationService, userService)
 
 	app := fiber.New()
 
@@ -67,6 +70,7 @@ func main() {
 	router.SetupUserRoute(api, userController, authService)
 	router.SetupCompetitionRoute(api, competitionController, authService)
 	router.SetupAuthRoute(api, authController, authService)
+	router.SetupOrganizationRoute(api, organizationController, authService)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.AppPort))
 }

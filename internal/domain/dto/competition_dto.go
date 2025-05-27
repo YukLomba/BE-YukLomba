@@ -46,12 +46,6 @@ type CompetitionResponse struct {
 	UpdatedAt   time.Time         `json:"updatedAt"`
 }
 
-// OrganizationShort represents a simplified organization for response
-type OrganizationShort struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
 // CompetitionListResponse represents a list of competitions
 type CompetitionListResponse struct {
 	Competitions []CompetitionResponse `json:"competitions"`

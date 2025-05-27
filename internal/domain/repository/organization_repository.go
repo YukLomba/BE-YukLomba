@@ -6,9 +6,9 @@ import (
 )
 
 type OrganizationRepository interface {
-	FindByID(id uuid.UUID) (*entity.User, error)
-	FindAll() ([]*entity.User, error)
-	Create(user *entity.User) error
-	Update(user *entity.User) error
+	FindByID(id uuid.UUID) (*entity.Organization, error)
+	FindAll() ([]*entity.Organization, error)
+	Create(org *entity.Organization) error
+	Update(org *entity.Organization) error
 	Delete(id uuid.UUID) error
 }
