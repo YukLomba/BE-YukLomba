@@ -27,6 +27,12 @@ cp .env.example .env
 go run cmd/api/main.go db --migrate
 ```
 
+migrate with fresh
+
+```bash
+go run cmd/api/main.go db --migrate --fresh
+```
+
 ### 💾 Seeder
 ```bash
 go run cmd/api/main.go db --seed

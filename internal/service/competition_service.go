@@ -1,18 +1,19 @@
 package service
 
 import (
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
 )
 
 type CompetitionService interface {
-	GetCompetition(id uuid.UUID) (*entity.Competition, error)
-	GetAllCompetitions() ([]*entity.Competition, error)
-	CreateCompetition(competition *entity.Competition) error
-	UpdateCompetition(competition *entity.Competition) error
+	GetCompetition(id uuid.UUID) (*dto.CompetitionResponse, error)
+	GetAllCompetitions() (*dto.CompetitionListResponse, error)
+	CreateCompetition(competition *dto.CompetitionCreateRequest) error
+	UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error
 	DeleteCompetition(id uuid.UUID) error
-	GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error)
+	GetCompetitionsByOrganizer(organizerID uuid.UUID) (*dto.CompetitionListResponse, error)
 }
 
 type CompetitionServiceImpl struct {
@@ -26,23 +27,62 @@ func NewCompetitionService(competitionRepo repository.CompetitionRepository) Com
 }
 
 // GetCompetition implements CompetitionService.
-func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*entity.Competition, error) {
-	return s.competitionRepo.FindByID(id)
+func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*dto.CompetitionResponse, error) {
+	competition, err := s.competitionRepo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return s.toCompetitionResponse(competition), nil
 }
 
 // GetAllCompetitions implements CompetitionService.
-func (s *CompetitionServiceImpl) GetAllCompetitions() ([]*entity.Competition, error) {
-	return s.competitionRepo.FindAll()
+func (s *CompetitionServiceImpl) GetAllCompetitions() (*dto.CompetitionListResponse, error) {
+	competitions, err := s.competitionRepo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &dto.CompetitionListResponse{
+		Total: len(competitions),
+	}
+	for _, comp := range competitions {
+		response.Competitions = append(response.Competitions, *s.toCompetitionResponse(comp))
+	}
+	return response, nil
 }
 
 // CreateCompetition implements CompetitionService.
-func (s *CompetitionServiceImpl) CreateCompetition(competition *entity.Competition) error {
-	return s.competitionRepo.Create(competition)
+func (s *CompetitionServiceImpl) CreateCompetition(competition *dto.CompetitionCreateRequest) error {
+	entity := &entity.Competition{
+		Title:       competition.Title,
+		Type:        competition.Type,
+		Description: competition.Description,
+		OrganizerID: competition.OrganizerID,
+		Deadline:    competition.Deadline,
+		Category:    competition.Category,
+		Rules:       competition.Rules,
+		EventLink:   competition.EventLink,
+	}
+	return s.competitionRepo.Create(entity)
 }
 
 // UpdateCompetition implements CompetitionService.
-func (s *CompetitionServiceImpl) UpdateCompetition(competition *entity.Competition) error {
-	return s.competitionRepo.Update(competition)
+func (s *CompetitionServiceImpl) UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error {
+	existing, err := s.competitionRepo.FindByID(id)
+	if err != nil {
+		return err
+	}
+
+	existing.Title = competition.Title
+	existing.Type = competition.Type
+	existing.Description = competition.Description
+	existing.Deadline = competition.Deadline
+	existing.Category = competition.Category
+	existing.Rules = competition.Rules
+	existing.EventLink = competition.EventLink
+	existing.Results = competition.Results
+
+	return s.competitionRepo.Update(existing)
 }
 
 // DeleteCompetition implements CompetitionService.
@@ -51,6 +91,37 @@ func (s *CompetitionServiceImpl) DeleteCompetition(id uuid.UUID) error {
 }
 
 // GetCompetitionsByOrganizer implements CompetitionService.
-func (s *CompetitionServiceImpl) GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error) {
-	return s.competitionRepo.FindByOrganizerID(organizerID)
+func (s *CompetitionServiceImpl) GetCompetitionsByOrganizer(organizerID uuid.UUID) (*dto.CompetitionListResponse, error) {
+	competitions, err := s.competitionRepo.FindByOrganizerID(organizerID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &dto.CompetitionListResponse{
+		Total: len(competitions),
+	}
+	for _, comp := range competitions {
+		response.Competitions = append(response.Competitions, *s.toCompetitionResponse(comp))
+	}
+	return response, nil
+}
+
+func (s *CompetitionServiceImpl) toCompetitionResponse(competition *entity.Competition) *dto.CompetitionResponse {
+	return &dto.CompetitionResponse{
+		ID:          competition.ID,
+		Title:       competition.Title,
+		Type:        competition.Type,
+		Description: competition.Description,
+		Organizer: dto.OrganizationShort{
+			ID:   competition.OrganizerID,
+			Name: competition.Organizer.Name,
+		},
+		Deadline:  competition.Deadline,
+		Category:  competition.Category,
+		Rules:     competition.Rules,
+		EventLink: competition.EventLink,
+		Results:   competition.Results,
+		CreatedAt: competition.CreatedAt,
+		UpdatedAt: competition.UpdatedAt,
+	}
 }
