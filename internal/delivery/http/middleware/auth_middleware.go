@@ -3,6 +3,8 @@ package middleware
 import (
 	"strings"
 
+	"slices"
+
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
@@ -65,10 +67,8 @@ func RoleMiddleware(roles ...string) fiber.Handler {
 
 		// Check if the user has the required role
 		userRole := role.(string)
-		for _, r := range roles {
-			if r == userRole {
-				return c.Next()
-			}
+		if slices.Contains(roles, userRole) {
+			return c.Next()
 		}
 
 		// If the user doesn't have the required role, return forbidden
