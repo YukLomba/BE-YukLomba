@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/google/uuid"
 )
@@ -13,4 +14,5 @@ type CompetitionRepository interface {
 	Delete(id uuid.UUID) error
 	CreateUserRegistration(registration *entity.Registration) error
 	FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error)
+	FindWithFilter(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
 }

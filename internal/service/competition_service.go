@@ -9,7 +9,7 @@ import (
 
 type CompetitionService interface {
 	GetCompetition(id uuid.UUID) (*dto.CompetitionResponse, error)
-	GetAllCompetitions() (*dto.CompetitionListResponse, error)
+	GetAllCompetitions(filter *dto.CompetitionFilter) (*dto.CompetitionListResponse, error)
 	CreateCompetition(competition *dto.CompetitionCreateRequest) error
 	UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error
 	DeleteCompetition(id uuid.UUID) error
@@ -37,8 +37,17 @@ func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*dto.CompetitionR
 }
 
 // GetAllCompetitions implements CompetitionService.
-func (s *CompetitionServiceImpl) GetAllCompetitions() (*dto.CompetitionListResponse, error) {
-	competitions, err := s.competitionRepo.FindAll()
+func (s *CompetitionServiceImpl) GetAllCompetitions(filter *dto.CompetitionFilter) (*dto.CompetitionListResponse, error) {
+	var competitions []*entity.Competition
+	var err error
+	if filter != nil {
+		competitions, err = s.competitionRepo.FindWithFilter(filter)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		competitions, err = s.competitionRepo.FindAll()
+	}
 	if err != nil {
 		return nil, err
 	}

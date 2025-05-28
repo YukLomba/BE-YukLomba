@@ -81,7 +81,11 @@ func (c *CompetitionController) GetCompetition(ctx *fiber.Ctx) error {
 
 // GetAllCompetitions retrieves all competitions
 func (c *CompetitionController) GetAllCompetitions(ctx *fiber.Ctx) error {
-	competitions, err := c.competitionService.GetAllCompetitions()
+	filterQuery := new(dto.CompetitionFilter)
+	if err := ctx.QueryParser(filterQuery); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+	competitions, err := c.competitionService.GetAllCompetitions(filterQuery)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch competitions"})
 	}

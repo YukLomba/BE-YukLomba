@@ -11,6 +11,7 @@ type CompetitionCreateRequest struct {
 	Title       string    `json:"title" validate:"required"`
 	Type        string    `json:"type" validate:"required"`
 	Description string    `json:"description" validate:"required"`
+	Image       *[]string `json:"image" validate:"required,dive,url"`
 	OrganizerID uuid.UUID `json:"organizer_id" validate:"required"`
 	Deadline    time.Time `json:"deadline" validate:"required,future"`
 	Category    string    `json:"category" validate:"required"`
@@ -23,6 +24,7 @@ type CompetitionUpdateRequest struct {
 	Title       string    `json:"title" validate:"required"`
 	Type        string    `json:"type" validate:"required"`
 	Description string    `json:"description" validate:"required"`
+	Image       *[]string `json:"image" validate:"required,dive,url"`
 	Deadline    time.Time `json:"deadline" validate:"required,future"`
 	Category    string    `json:"category" validate:"required"`
 	Rules       string    `json:"rules"`
@@ -36,6 +38,7 @@ type CompetitionResponse struct {
 	Title       string            `json:"title"`
 	Type        string            `json:"type"`
 	Description string            `json:"description"`
+	Image       *[]string         `json:"image"`
 	Organizer   OrganizationShort `json:"organizer"`
 	Deadline    time.Time         `json:"deadline"`
 	Category    string            `json:"category"`
@@ -50,4 +53,11 @@ type CompetitionResponse struct {
 type CompetitionListResponse struct {
 	Competitions []CompetitionResponse `json:"competitions"`
 	Total        int                   `json:"total"`
+}
+type CompetitionFilter struct {
+	Title    *string    `query:"title" validate:"omitempty,min=3"`
+	Type     *string    `query:"type" validate:"omitempty"`
+	Category *string    `query:"category" validate:"omitempty"`
+	Before   *time.Time `query:"before" validate:"omitempty"` // untuk deadline sebelum tanggal tertentu
+	After    *time.Time `query:"after" validate:"omitempty"`  // untuk deadline setelah tanggal tertentu
 }

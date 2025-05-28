@@ -34,6 +34,7 @@ func SeedCompetitions(db *gorm.DB) error {
 			Title:       "Web Development Hackathon",
 			Type:        "Hackathon",
 			Description: "A 48-hour hackathon focused on creating innovative web applications.",
+			Image:       &[]string{"https://lombasma.com/wp-content/uploads/2022/12/lomba-sma-768x799.png", "https://th.bing.com/th/id/OIP.Gg4-8VRGkmSTQGBqgaryGgHaKe?cb=iwc2&pid=ImgDet&w=474&h=670&rs=1"},
 			Deadline:    time.Now().AddDate(0, 1, 0), // 1 month from now
 			Organizer:   organization["Google LLC"],
 			Category:    "Technology",

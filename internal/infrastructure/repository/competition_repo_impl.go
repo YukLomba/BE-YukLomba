@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
@@ -70,6 +71,32 @@ func (r *competitionRepository) Delete(id uuid.UUID) error {
 func (r *competitionRepository) FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error) {
 	var competitions []*entity.Competition
 	result := r.db.Find(&competitions, "organizer_id = ?", organizerID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return competitions, nil
+}
+func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([]*entity.Competition, error) {
+	var competitions []*entity.Competition
+	query := r.db.Model(&entity.Competition{})
+	if filter != nil {
+		if *filter.Title != "" {
+			query = query.Where("tittle LIKE ?", "%"+*filter.Title+"%")
+		}
+		if *filter.Category != "" {
+			query = query.Where("location == ?", "%"+*filter.Category+"%")
+		}
+		if filter.Type != nil {
+			query = query.Where("type == ?", filter.Type)
+		}
+		if filter.Before != nil {
+			query = query.Where("deadline <= ?", filter.Before)
+		}
+		if filter.After != nil {
+			query = query.Where("deadline >= ?", filter.After)
+		}
+	}
+	result := query.Find(&competitions)
 	if result.Error != nil {
 		return nil, result.Error
 	}
