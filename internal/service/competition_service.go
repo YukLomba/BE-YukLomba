@@ -11,6 +11,7 @@ type CompetitionService interface {
 	GetCompetition(id uuid.UUID) (*dto.CompetitionResponse, error)
 	GetAllCompetitions(filter *dto.CompetitionFilter) (*dto.CompetitionListResponse, error)
 	CreateCompetition(competition *dto.CompetitionCreateRequest) error
+	CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) error
 	UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error
 	DeleteCompetition(id uuid.UUID) error
 	RegisterUserToCompetition(userID uuid.UUID, competitionID uuid.UUID) error
@@ -67,13 +68,33 @@ func (s *CompetitionServiceImpl) CreateCompetition(competition *dto.CompetitionC
 		Title:       competition.Title,
 		Type:        competition.Type,
 		Description: competition.Description,
-		OrganizerID: competition.OrganizerID,
+		OrganizerID: *competition.OrganizerID,
 		Deadline:    competition.Deadline,
 		Category:    competition.Category,
 		Rules:       competition.Rules,
 		EventLink:   competition.EventLink,
 	}
 	return s.competitionRepo.Create(entity)
+}
+
+func (s *CompetitionServiceImpl) CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) error {
+	var Competitions []entity.Competition
+
+	for _, comp := range competitions.Competitions {
+		entity := entity.Competition{
+			Title:       comp.Title,
+			Type:        comp.Type,
+			Description: comp.Description,
+			OrganizerID: *comp.OrganizerID,
+			Deadline:    comp.Deadline,
+			Category:    comp.Category,
+			Rules:       comp.Rules,
+			EventLink:   comp.EventLink,
+		}
+		Competitions = append(Competitions, entity)
+	}
+
+	return s.competitionRepo.CreateMany(&Competitions)
 }
 
 // UpdateCompetition implements CompetitionService.

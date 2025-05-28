@@ -10,6 +10,7 @@ type CompetitionRepository interface {
 	FindByID(id uuid.UUID) (*entity.Competition, error)
 	FindAll() ([]*entity.Competition, error)
 	Create(competition *entity.Competition) error
+	CreateMany(competitions *[]entity.Competition) error
 	Update(competition *entity.Competition) error
 	Delete(id uuid.UUID) error
 	CreateUserRegistration(registration *entity.Registration) error

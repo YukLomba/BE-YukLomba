@@ -8,15 +8,19 @@ import (
 
 // CompetitionCreateRequest represents the data needed to create a competition
 type CompetitionCreateRequest struct {
-	Title       string    `json:"title" validate:"required"`
-	Type        string    `json:"type" validate:"required"`
-	Description string    `json:"description" validate:"required"`
-	Image       *[]string `json:"image" validate:"required,dive,url"`
-	OrganizerID uuid.UUID `json:"organizer_id" validate:"required"`
-	Deadline    time.Time `json:"deadline" validate:"required,future"`
-	Category    string    `json:"category" validate:"required"`
-	Rules       string    `json:"rules"`
-	EventLink   string    `json:"eventLink" validate:"omitempty,url"`
+	Title       string     `json:"title" validate:"required"`
+	Type        string     `json:"type" validate:"required"`
+	Description string     `json:"description" validate:"required"`
+	Image       *[]string  `json:"image" validate:"required,dive,url"`
+	OrganizerID *uuid.UUID `json:"organizer_id" validate:"required"`
+	Deadline    time.Time  `json:"deadline" validate:"required,future"`
+	Category    string     `json:"category" validate:"required"`
+	Rules       string     `json:"rules"`
+	EventLink   string     `json:"eventLink" validate:"omitempty,url"`
+}
+
+type MultiCompetitionCreateRequest struct {
+	Competitions []CompetitionCreateRequest `json:"competitions" validate:"required,dive"`
 }
 
 // CompetitionUpdateRequest represents the data needed to update a competition

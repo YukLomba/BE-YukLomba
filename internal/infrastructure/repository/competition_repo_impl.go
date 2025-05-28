@@ -42,6 +42,10 @@ func (r *competitionRepository) FindAll() ([]*entity.Competition, error) {
 func (r *competitionRepository) Create(competition *entity.Competition) error {
 	return r.db.Create(competition).Error
 }
+func (r *competitionRepository) CreateMany(competition *[]entity.Competition) error {
+	len := len(*competition)
+	return r.db.CreateInBatches(competition, len).Error
+}
 
 // Update implements repository.CompetitionRepository.
 func (r *competitionRepository) Update(competition *entity.Competition) error {

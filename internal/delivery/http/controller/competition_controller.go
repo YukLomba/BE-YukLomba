@@ -112,13 +112,37 @@ func (c *CompetitionController) CreateCompetition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "User is not authorized to create competition"})
 	}
 
-	req.OrganizerID = *user.OrganizationID
+	*req.OrganizerID = *user.OrganizationID
 
 	if err := c.competitionService.CreateCompetition(req); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competition"})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Competition created successfully"})
+}
+
+func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
+	req := new(dto.MultiCompetitionCreateRequest)
+	if err := ctx.BodyParser(req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+	filtered := new(dto.MultiCompetitionCreateRequest)
+	var errors []error
+	for _, c := range req.Competitions {
+		if !validateDeadlineFuture(c.Deadline) {
+			errors = append(errors, fmt.Errorf("competition with ID %s has an invalid deadline", c.Deadline))
+			continue
+		}
+		if c.OrganizerID == nil {
+			errors = append(errors, fmt.Errorf("competition with ID %s has an invalid organizer ID", c.OrganizerID))
+			continue
+		}
+		filtered.Competitions = append(filtered.Competitions, c)
+	}
+	if err := c.competitionService.CreateManyCompetitition(filtered); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competitions"})
+	}
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Competitions created successfully", "errors": errors})
 }
 
 // UpdateCompetition updates an existing competition
