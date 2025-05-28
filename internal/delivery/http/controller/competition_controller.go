@@ -126,23 +126,18 @@ func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
-	filtered := new(dto.MultiCompetitionCreateRequest)
-	var errors []error
-	for _, c := range req.Competitions {
-		if !validateDeadlineFuture(c.Deadline) {
-			errors = append(errors, fmt.Errorf("competition with ID %s has an invalid deadline", c.Deadline))
-			continue
-		}
-		if c.OrganizerID == nil {
-			errors = append(errors, fmt.Errorf("competition with ID %s has an invalid organizer ID", c.OrganizerID))
-			continue
-		}
-		filtered.Competitions = append(filtered.Competitions, c)
-	}
-	if err := c.competitionService.CreateManyCompetitition(filtered); err != nil {
+
+	notValidMessage, err := c.competitionService.CreateManyCompetitition(req)
+	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competitions"})
 	}
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Competitions created successfully", "errors": errors})
+	response := fiber.Map{
+		"message": "Competitions created successfully",
+	}
+	if notValidMessage != nil {
+		response["not_valid"] = *notValidMessage
+	}
+	return ctx.Status(fiber.StatusCreated).JSON(response)
 }
 
 // UpdateCompetition updates an existing competition

@@ -28,6 +28,9 @@ func SetupCompetitionRoute(router fiber.Router, competitionController *controlle
 	// Create new competition
 	protected.Post("/", competitionController.CreateCompetition)
 
+	// Create multiple competitions
+	protected.Post("/multi", competitionController.CreateManyCompetitition)
+
 	// Update competition
 	protected.Put("/:id", competitionController.UpdateCompetition)
 

@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
@@ -11,7 +14,7 @@ type CompetitionService interface {
 	GetCompetition(id uuid.UUID) (*dto.CompetitionResponse, error)
 	GetAllCompetitions(filter *dto.CompetitionFilter) (*dto.CompetitionListResponse, error)
 	CreateCompetition(competition *dto.CompetitionCreateRequest) error
-	CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) error
+	CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) (*[]string, error)
 	UpdateCompetition(id uuid.UUID, competition *dto.CompetitionUpdateRequest) error
 	DeleteCompetition(id uuid.UUID) error
 	RegisterUserToCompetition(userID uuid.UUID, competitionID uuid.UUID) error
@@ -77,10 +80,20 @@ func (s *CompetitionServiceImpl) CreateCompetition(competition *dto.CompetitionC
 	return s.competitionRepo.Create(entity)
 }
 
-func (s *CompetitionServiceImpl) CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) error {
+func (s *CompetitionServiceImpl) CreateManyCompetitition(competitions *dto.MultiCompetitionCreateRequest) (*[]string, error) {
 	var Competitions []entity.Competition
+	var notValidMessage []string
 
 	for _, comp := range competitions.Competitions {
+
+		if comp.OrganizerID == nil {
+			notValidMessage = append(notValidMessage, fmt.Sprintf("OrganizerID is required for competition with title %s", comp.Title))
+			continue
+		}
+		if comp.Deadline.Before(time.Now()) {
+			notValidMessage = append(notValidMessage, fmt.Sprintf("Deadline must be after %s for competition with title %s", time.Now().Format("2006-01-02"), comp.Title))
+			continue
+		}
 		entity := entity.Competition{
 			Title:       comp.Title,
 			Type:        comp.Type,
@@ -93,8 +106,14 @@ func (s *CompetitionServiceImpl) CreateManyCompetitition(competitions *dto.Multi
 		}
 		Competitions = append(Competitions, entity)
 	}
-
-	return s.competitionRepo.CreateMany(&Competitions)
+	err := s.competitionRepo.CreateMany(&Competitions)
+	if err != nil {
+		return nil, err
+	}
+	if len(notValidMessage) > 0 {
+		return &notValidMessage, nil
+	}
+	return nil, nil
 }
 
 // UpdateCompetition implements CompetitionService.
