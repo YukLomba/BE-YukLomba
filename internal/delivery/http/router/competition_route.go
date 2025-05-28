@@ -3,11 +3,10 @@ package router
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/controller"
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/middleware"
-	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupCompetitionRoute(router fiber.Router, competitionController *controller.CompetitionController, authService service.AuthService) {
+func SetupCompetitionRoute(router fiber.Router, competitionController *controller.CompetitionController) {
 	competitions := router.Group("/competitions")
 
 	// public routes
@@ -21,10 +20,10 @@ func SetupCompetitionRoute(router fiber.Router, competitionController *controlle
 	competitions.Get("/organizer/:id", competitionController.GetCompetitionsByOrganizer)
 
 	// Register user to competition
-	competitions.Post("/:id/register", middleware.AuthMiddleware(authService), competitionController.RegisterToCompetition)
+	competitions.Post("/:id/register", middleware.AuthMiddleware(), competitionController.RegisterToCompetition)
 
 	// protected routes
-	protected := competitions.Use(middleware.AuthMiddleware(authService), middleware.RoleMiddleware("admin", "organizer"))
+	protected := competitions.Use(middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "organizer"))
 
 	// Create new competition
 	protected.Post("/", competitionController.CreateCompetition)

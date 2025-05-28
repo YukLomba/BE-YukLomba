@@ -58,9 +58,7 @@ func (r userRepository) Create(user *entity.User) error {
 // FindAll implements repository.UserRepository.1
 func (r userRepository) FindAll() ([]*entity.User, error) {
 	var users []*entity.User
-	result := r.db.Preload("OrganizedCompetitions").
-		Preload("JoinedCompetitions").
-		Find(&users)
+	result := r.db.Preload("JoinedCompetitions").Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}

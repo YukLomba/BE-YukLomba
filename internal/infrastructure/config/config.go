@@ -32,6 +32,8 @@ type Config struct {
 	Auth
 }
 
+var JwtSecret string
+
 func getEnv(key string, defaultValue string) string {
 	value := os.Getenv(key)
 
@@ -50,9 +52,11 @@ func LoadConfig() (*Config, error) {
 		log.Fatal("Error loading .env file")
 		return nil, err
 	}
+	JwtSecret = getEnv("JWT_SECRET", "secret")
+
 	return &Config{
 		Server: Server{
-			Port: getEnv("SERVER_PORT", "8080"),
+			Port: getEnv("APP_PORT", "8080"),
 		},
 		DB: DB{
 			Host:     getEnv("DB_HOST", "localhost"),

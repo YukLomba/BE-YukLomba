@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -28,11 +29,10 @@ func (c *AuthController) Register(ctx *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
-
 	// Validate request
-	if req.Username == "" || req.Email == "" || req.Password == "" {
+	if err := util.ValidateStruct(req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Username, email, and password are required",
+			"error": err.Error(),
 		})
 	}
 

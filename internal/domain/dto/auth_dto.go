@@ -2,22 +2,22 @@ package dto
 
 // LoginRequest represents the login request data
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 // RegisterRequest represents the registration request data
 type RegisterRequest struct {
-	Username   string  `json:"username"`
-	Email      string  `json:"email"`
-	Password   string  `json:"password"`
-	University string  `json:"university"`
-	Interests  string  `json:"interests"`
-	Role       *string `json:"role"`
+	Username   string  `json:"username" validate:"required"`
+	Email      string  `json:"email" validate:"required,email"`
+	Password   string  `json:"password" validate:"required,min=8"`
+	University string  `json:"university" validate:"required"`
+	Interests  string  `json:"interests" validate:"required"`
+	Role       *string `json:"role" validate:"omitempty"`
 }
 
 type CompleteRegistrationRequest struct {
-	Role string `json:"role" binding:"required"`
+	Role string `json:"role"`
 }
 
 // TokenResponse represents the authentication token response
@@ -27,13 +27,8 @@ type TokenResponse struct {
 	ExpiresIn   int64  `json:"expires_in"`
 }
 
-// GoogleAuthRequest represents the Google OAuth2 authentication request
-type GoogleAuthRequest struct {
-	IdToken string `json:"id_token"`
-}
-
 type GoogleAuthCallbackRequest struct {
-	Code  string `form:"code" json:"code" binding:"required"`
+	Code  string `form:"code" json:"code"`
 	State string `form:"state" json:"state"`
 }
 

@@ -5,12 +5,13 @@ import (
 
 	"slices"
 
-	"github.com/YukLomba/BE-YukLomba/internal/service"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/config"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/gofiber/fiber/v2"
 )
 
 // AuthMiddleware is a middleware for JWT authentication
-func AuthMiddleware(authService service.AuthService) fiber.Handler {
+func AuthMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get authorization header
 		authHeader := c.Get("Authorization")
@@ -29,9 +30,10 @@ func AuthMiddleware(authService service.AuthService) fiber.Handler {
 
 		// Extract the token
 		token := strings.TrimPrefix(authHeader, "Bearer ")
+		JwtSecret := config.JwtSecret
 
 		// Validate the token
-		claims, err := authService.ValidateToken(token)
+		claims, err := util.ValidateToken(token, JwtSecret)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Invalid or expired token",

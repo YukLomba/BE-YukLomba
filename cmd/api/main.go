@@ -71,10 +71,10 @@ func main() {
 	api := app.Group("/api")
 
 	// Setup routes
-	router.SetupUserRoute(api, userController, authService)
-	router.SetupCompetitionRoute(api, competitionController, authService)
-	router.SetupAuthRoute(api, authController, authService)
-	router.SetupOrganizationRoute(api, organizationController, authService)
+	router.SetupUserRoute(api, userController)
+	router.SetupCompetitionRoute(api, competitionController)
+	router.SetupAuthRoute(api, authController)
+	router.SetupOrganizationRoute(api, organizationController)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.Server.Port))
 }
