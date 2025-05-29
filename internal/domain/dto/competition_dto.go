@@ -11,7 +11,7 @@ type CompetitionCreateRequest struct {
 	Title       string     `json:"title" validate:"required"`
 	Type        string     `json:"type" validate:"required"`
 	Description string     `json:"description" validate:"required"`
-	Image       *[]string  `json:"image" validate:"required,dive,url"`
+	Image       *[]string  `json:"image" validate:"dive,url"`
 	OrganizerID *uuid.UUID `json:"organizer_id" validate:"required"`
 	Deadline    time.Time  `json:"deadline" validate:"required,future"`
 	Category    string     `json:"category" validate:"required"`

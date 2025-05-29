@@ -19,11 +19,13 @@ Authorization: Bearer <your_token>
 ### Authentication Endpoints
 
 #### Register a new user
+
 ```
 POST /auth/register
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "string (required, min 1)",
@@ -35,6 +37,7 @@ POST /auth/register
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "message": "User registered successfully",
@@ -47,16 +50,19 @@ POST /auth/register
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid request body
 - `400 Bad Request`: Validation errors (returns specific error messages)
 - `409 Conflict`: Email already registered
 
 #### Login
+
 ```
 POST /auth/login
 ```
 
 **Request Body:**
+
 ```json
 {
   "email": "string (required)",
@@ -65,39 +71,7 @@ POST /auth/login
 ```
 
 **Response (200 OK):**
-```json
-{
-  "access_token": "string",
-  "token_type": "Bearer", 
-  "expires_in": 86400
-}
-```
 
-**Error Responses:**
-- `400 Bad Request`: Missing email/password
-- `401 Unauthorized`: Invalid credentials
-- `403 Forbidden`: Account not activated
-
-#### Google OAuth2 Flow
-
-1. Initiate Google Login
-```
-GET /auth/google
-```
-
-**Response:**  
-302 Redirect to Google OAuth consent screen
-
-2. OAuth Callback
-```
-GET /auth/google/callback
-```
-
-**Query Parameters:**
-- `code`: Authorization code from Google
-- `state`: CSRF protection token
-
-**Success Response (200 OK):**
 ```json
 {
   "access_token": "string",
@@ -107,21 +81,63 @@ GET /auth/google/callback
 ```
 
 **Error Responses:**
+
+- `400 Bad Request`: Missing email/password
+- `401 Unauthorized`: Invalid credentials
+- `403 Forbidden`: Account not activated
+
+#### Google OAuth2 Flow
+
+1. Initiate Google Login
+
+```
+GET /auth/google
+```
+
+**Response:**  
+302 Redirect to Google OAuth consent screen
+
+2. OAuth Callback
+
+```
+GET /auth/google/callback
+```
+
+**Query Parameters:**
+
+- `code`: Authorization code from Google
+- `state`: CSRF protection token
+
+**Success Response (200 OK):**
+
+```json
+{
+  "access_token": "string",
+  "token_type": "Bearer",
+  "expires_in": 86400
+}
+```
+
+**Error Responses:**
+
 - `400 Bad Request`: Missing code/state
 - `401 Unauthorized`: Invalid OAuth code
 - `500 Internal Server Error`: Google API communication failure
 
 #### Complete Registration (Set Role)
+
 ```
 POST /auth/complete-registration
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer <your_temp_token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "role": "string (required, enum: student|organizer)"
@@ -129,6 +145,7 @@ Authorization: Bearer <your_temp_token>
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "User registration completed successfully",
@@ -142,21 +159,25 @@ Authorization: Bearer <your_temp_token>
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid role
 - `401 Unauthorized`: Invalid/missing token
 - `403 Forbidden`: Role already set
 
 #### Get User Profile
+
 ```
 GET /auth/profile
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer <your_token>
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -168,6 +189,7 @@ Authorization: Bearer <your_token>
 ```
 
 **Error Responses:**
+
 - `401 Unauthorized`: Missing/invalid token
 
 ## User Endpoints
@@ -179,6 +201,7 @@ GET /users
 ```
 
 **Response (200 OK):**
+
 ```json
 [
   {
@@ -195,6 +218,7 @@ GET /users
 ```
 
 **Error Responses:**
+
 - `500 Internal Server Error`: Failed to fetch users
 
 ### Get User by ID
@@ -204,9 +228,11 @@ GET /users/:id
 ```
 
 **Parameters:**
+
 - `id`: User UUID
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -221,6 +247,7 @@ GET /users/:id
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid ID format
 - `404 Not Found`: User not found
 
@@ -231,9 +258,11 @@ GET /users/:id/registration
 ```
 
 **Parameters:**
+
 - `id`: User UUID
 
 **Response (200 OK):**
+
 ```json
 [
   {
@@ -246,6 +275,7 @@ GET /users/:id/registration
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid ID format
 - `500 Internal Server Error`: Failed to fetch user's past competitions
 
@@ -256,6 +286,7 @@ POST /users
 ```
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -267,6 +298,7 @@ POST /users
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "uuid",
@@ -281,6 +313,7 @@ POST /users
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid request body
 - `500 Internal Server Error`: Failed to create user
 
@@ -291,9 +324,11 @@ PUT /users/:id
 ```
 
 **Parameters:**
+
 - `id`: User UUID
 
 **Request Body:**
+
 ```json
 {
   "username": "string",
@@ -304,6 +339,7 @@ PUT /users/:id
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -318,6 +354,7 @@ PUT /users/:id
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid ID format or request body
 - `500 Internal Server Error`: Failed to update user
 
@@ -326,11 +363,13 @@ PUT /users/:id
 ### Competition Endpoints
 
 #### Get All Competitions
+
 ```
 GET /competitions
 ```
 
 **Query Parameters:**
+
 - `title`: Filter by title (min 3 chars)
 - `type`: Filter by competition type
 - `category`: Filter by category
@@ -338,6 +377,7 @@ GET /competitions
 - `after`: Filter competitions with deadline after date (ISO format)
 
 **Response (200 OK):**
+
 ```json
 {
   "competitions": [
@@ -365,18 +405,22 @@ GET /competitions
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid filter parameters
 - `500 Internal Server Error`: Failed to fetch competitions
 
 #### Get Competition by ID
+
 ```
 GET /competitions/:id
 ```
 
 **Parameters:**
+
 - `id`: Competition UUID
 
 **Response (200 OK):**
+
 ```json
 {
   "id": "uuid",
@@ -399,26 +443,30 @@ GET /competitions/:id
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid UUID format
 - `404 Not Found`: Competition not found
 
 #### Create Competition
+
 ```
 POST /competitions
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer <organizer_token>
 ```
 
 **Request Body:**
+
 ```json
 {
   "title": "string (required)",
   "type": "string (required)",
   "description": "string (required)",
-  "image": ["url1", "url2 (required, min 1 url)"],
+  "image": ["url1", "url2"],
   "deadline": "ISO8601 (required, future date)",
   "category": "string (required)",
   "rules": "string",
@@ -427,6 +475,7 @@ Authorization: Bearer <organizer_token>
 ```
 
 **Response (201 Created):**
+
 ```json
 {
   "id": "uuid",
@@ -435,32 +484,81 @@ Authorization: Bearer <organizer_token>
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Validation errors
 - `401 Unauthorized`: Missing/invalid token
 - `403 Forbidden`: User not an organizer
 - `500 Internal Server Error`: Creation failed
 
+#### Create Multi Competition
+
+```
+POST /competitions/multi
+```
+
+**Headers:**
+
+```
+Authorization: Bearer <organizer_token>
+```
+
+**Request Body:**
+
+```json
+[
+  {
+    "title": "string (required)",
+    "type": "string (required)",
+    "description": "string (required)",
+    "image": ["url1", "url2"],
+    "deadline": "ISO8601 (required, future date)",
+    "category": "string (required)",
+    "rules": "string",
+    "eventLink": "url (valid URL)"
+  }
+]
+```
+
+**Response (201 Created):**
+
+```json
+{
+  "message": "Competition created successfully",
+  "error": "string"
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request`: Validation errors
+- `401 Unauthorized`: Missing/invalid token
+- `403 Forbidden`: User not an organizer
+- `500 Internal Server Error`: Creation failed
 
 #### Update Competition
+
 ```
 PUT /competitions/:id
 ```
 
 **Headers:**
+
 ```
 Authorization: Bearer <organizer_token>
 ```
 
 **Parameters:**
+
 - `id`: Competition UUID
 
 **Request Body:**
+
 ```json
 {
   "title": "string (required)",
   "type": "string (required)",
   "description": "string (required)",
-  "image": ["url1", "url2 (required, min 1 url)"],
+  "image": ["url1", "url2"],
   "deadline": "ISO8601 (required, future date)",
   "category": "string (required)",
   "rules": "string",
@@ -470,6 +568,7 @@ Authorization: Bearer <organizer_token>
 ```
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Competition updated successfully",
@@ -483,8 +582,9 @@ Authorization: Bearer <organizer_token>
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Validation errors
-- `401 Unauthorized`: Missing/invalid token  
+- `401 Unauthorized`: Missing/invalid token
 - `403 Forbidden`: User not authorized
 - `404 Not Found`: Competition not found
 - `500 Internal Server Error`: Update failed
@@ -496,9 +596,11 @@ DELETE /competitions/:id
 ```
 
 **Parameters:**
+
 - `id`: Competition UUID
 
 **Response (200 OK):**
+
 ```json
 {
   "message": "Competition deleted successfully"
@@ -506,6 +608,7 @@ DELETE /competitions/:id
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid ID format
 - `500 Internal Server Error`: Failed to delete competition
 
@@ -516,9 +619,11 @@ GET /competitions/organizer/:id
 ```
 
 **Parameters:**
+
 - `id`: Organizer UUID
 
 **Response (200 OK):**
+
 ```json
 [
   {
@@ -539,6 +644,7 @@ GET /competitions/organizer/:id
 ```
 
 **Error Responses:**
+
 - `400 Bad Request`: Invalid ID format
 - `500 Internal Server Error`: Failed to fetch competitions
 
