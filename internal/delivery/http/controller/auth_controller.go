@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"log"
+
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
@@ -89,6 +91,7 @@ func (c *AuthController) GoogleAuth(ctx *fiber.Ctx) error {
 	// Get Google OAuth URL
 	url, err := c.authService.GetGoogleOauthUrl()
 	if err != nil {
+		log.Println("Failed to get Google OAuth URL:", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get Google OAuth URL",
 		})
@@ -99,9 +102,9 @@ func (c *AuthController) GoogleAuth(ctx *fiber.Ctx) error {
 func (c *AuthController) GoogleCallback(ctx *fiber.Ctx) error {
 	// Parse request body
 	req := new(dto.GoogleAuthCallbackRequest)
-	if err := ctx.BodyParser(req); err != nil {
+	if err := ctx.QueryParser(req); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
+			"error": "Invalid request query",
 		})
 	}
 	token, err := c.authService.SignInWithGoogle(req.Code, req.State)

@@ -44,7 +44,7 @@ func GenerateOAuthStateJWT(jwtSecret string, expiry time.Duration) (string, erro
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(jwtSecret)
+	return token.SignedString([]byte(jwtSecret))
 }
 
 // ParseOAuthStateJWT parses and validates the JWT state string
@@ -54,7 +54,7 @@ func ParseOAuthStateJWT(tokenString string, jwtSecret string) (*OAuthStateClaims
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("unexpected signing method")
 		}
-		return jwtSecret, nil
+		return []byte(jwtSecret), nil
 	})
 
 	if err != nil {

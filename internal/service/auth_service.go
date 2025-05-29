@@ -115,7 +115,8 @@ func (s *AuthServiceImpl) GetGoogleOauthUrl() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return s.config.AuthCodeURL(state), nil
+	url := s.config.AuthCodeURL(state)
+	return url, nil
 }
 
 func (s *AuthServiceImpl) SignInWithGoogle(code string, state string) (*dto.TokenResponse, error) {

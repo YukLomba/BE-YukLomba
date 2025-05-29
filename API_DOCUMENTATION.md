@@ -439,11 +439,7 @@ Authorization: Bearer <organizer_token>
 - `401 Unauthorized`: Missing/invalid token
 - `403 Forbidden`: User not an organizer
 - `500 Internal Server Error`: Creation failed
-```
 
-**Error Responses:**
-- `400 Bad Request`: Invalid request body
-- `500 Internal Server Error`: Failed to create competition
 
 #### Update Competition
 ```

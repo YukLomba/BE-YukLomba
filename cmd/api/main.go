@@ -57,7 +57,9 @@ func main() {
 	authController := controller.NewAuthController(authService)
 	organizationController := controller.NewOrganizationController(organizationService, userService)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		AppName: "YukLomba API",
+	})
 
 	// Middleware
 	app.Use(logger.New())
