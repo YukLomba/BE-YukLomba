@@ -20,3 +20,15 @@ func Migrate(db *gorm.DB) {
 func DropAllTables(db *gorm.DB) {
 	db.Exec("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
 }
+
+func TruncateAllTables(db *gorm.DB) {
+	if db == nil {
+		log.Fatal("❌ Cannot truncate: DB connection is nil")
+		return
+	}
+
+	err := db.Exec("TRUNCATE users, competitions, registrations RESTART IDENTITY CASCADE").Error
+	if err != nil {
+		log.Fatalf("❌ Failed to truncate tables: %v", err)
+	}
+}
