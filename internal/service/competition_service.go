@@ -42,16 +42,8 @@ func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*dto.CompetitionR
 
 // GetAllCompetitions implements CompetitionService.
 func (s *CompetitionServiceImpl) GetAllCompetitions(filter *dto.CompetitionFilter) (*dto.CompetitionListResponse, error) {
-	var competitions []*entity.Competition
-	var err error
-	if filter != nil {
-		competitions, err = s.competitionRepo.FindWithFilter(filter)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		competitions, err = s.competitionRepo.FindAll()
-	}
+	competitions, err := s.competitionRepo.FindWithFilter(filter)
+
 	if err != nil {
 		return nil, err
 	}
