@@ -16,8 +16,8 @@ func SeedUserCompetition(db *gorm.DB) error {
 	}
 
 	var users []entity.User
-	if err := db.Limit(5).
-		Find(&users).Where("role = ?", "user").Error; err != nil {
+	if err := db.Limit(2).
+		Find(&users).Where("role = ?", "student").Error; err != nil {
 		return fmt.Errorf("failed to get users: %w", err)
 	}
 
