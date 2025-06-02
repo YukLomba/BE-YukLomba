@@ -159,5 +159,15 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 
 // RegisterUserToCompetition implements repository.CompetitionRepository.
 func (r *competitionRepository) CreateUserRegistration(registration *entity.Registration) error {
-	return r.db.Create(registration).Error
+	var competition entity.Competition
+	user := &entity.User{
+		ID: registration.UserID,
+	}
+	if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
+		return err
+	}
+	if err := r.db.Create(registration).Error; err != nil {
+		return err
+	}
+	return r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
 }
