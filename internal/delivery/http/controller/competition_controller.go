@@ -42,7 +42,7 @@ func parseUUIDParam(ctx *fiber.Ctx, param string) (uuid.UUID, error) {
 
 // getUserFromCtx fetches user from context locals ("userID")
 func (c *CompetitionController) getUserFromCtx(ctx *fiber.Ctx) (*entity.User, error) {
-	rawUserID := ctx.Locals("userID")
+	rawUserID := ctx.Locals("user_id")
 	userID, ok := rawUserID.(uuid.UUID)
 	if !ok {
 		return nil, errors.New("unauthorized: user ID missing or invalid in context")
