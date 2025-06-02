@@ -11,7 +11,7 @@ func Migrate(db *gorm.DB) {
 	if db == nil {
 		log.Fatal("❌ Cannot migrate: DB connection is nil")
 	}
-	err := db.AutoMigrate(&entity.User{}, &entity.Competition{}, &entity.Registration{})
+	err := db.AutoMigrate(&entity.User{}, &entity.Competition{}, &entity.Registration{}, &entity.Organization{})
 	if err != nil {
 		log.Fatalf("❌ Failed to migrate: %v", err)
 	}
@@ -27,7 +27,7 @@ func TruncateAllTables(db *gorm.DB) {
 		return
 	}
 
-	err := db.Exec("TRUNCATE users, competitions, registrations RESTART IDENTITY CASCADE").Error
+	err := db.Exec("TRUNCATE users, competitions, registrations, organizations RESTART IDENTITY CASCADE").Error
 	if err != nil {
 		log.Fatalf("❌ Failed to truncate tables: %v", err)
 	}
