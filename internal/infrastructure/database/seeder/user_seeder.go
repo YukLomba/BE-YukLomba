@@ -130,8 +130,3 @@ func SeedUsers(db *gorm.DB) error {
 
 	return nil
 }
-
-// Helper function to create a string pointer
-func stringPtr(s string) *string {
-	return &s
-}

@@ -73,6 +73,10 @@ func ValidateToken(tokenString string, jwtSecret string) (*JWTClaims, error) {
 
 	// Validate token and extract claims
 	if claims, ok := token.Claims.(*JWTClaims); ok && token.Valid {
+		// Check if token is expired
+		if claims.ExpiresAt != nil && claims.ExpiresAt.Before(time.Now()) {
+			return nil, errors.New("token has expired")
+		}
 		return claims, nil
 	}
 

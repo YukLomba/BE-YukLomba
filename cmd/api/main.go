@@ -37,6 +37,7 @@ func main() {
 		database.Migrate(db)
 	}
 	if *seedFlag {
+		database.TruncateAllTables(db)
 		seeder.SeedAll(db)
 	}
 

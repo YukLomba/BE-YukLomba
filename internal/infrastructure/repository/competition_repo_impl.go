@@ -123,20 +123,20 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 	var competitions []*entity.Competition
 	query := r.db.Model(&entity.Competition{})
 	if filter != nil {
-		if *filter.Title != "" {
-			query = query.Where("tittle LIKE ?", "%"+*filter.Title+"%")
+		if filter.Title != nil && *filter.Title != "" {
+			query = query.Where("title LIKE ?", "%"+*filter.Title+"%")
 		}
-		if *filter.Category != "" {
-			query = query.Where("location == ?", "%"+*filter.Category+"%")
+		if filter.Category != nil && *filter.Category != "" {
+			query = query.Where("category = ?", *filter.Category)
 		}
 		if filter.Type != nil {
-			query = query.Where("type == ?", filter.Type)
+			query = query.Where("type = ?", *filter.Type)
 		}
 		if filter.Before != nil {
-			query = query.Where("deadline <= ?", filter.Before)
+			query = query.Where("deadline <= ?", *filter.Before)
 		}
 		if filter.After != nil {
-			query = query.Where("deadline >= ?", filter.After)
+			query = query.Where("deadline >= ?", *filter.After)
 		}
 	}
 	result := query.Find(&competitions)
@@ -159,7 +159,17 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 
 // RegisterUserToCompetition implements repository.CompetitionRepository.
 func (r *competitionRepository) CreateUserRegistration(registration *entity.Registration) error {
-	return r.db.Create(registration).Error
+	var competition entity.Competition
+	user := &entity.User{
+		ID: registration.UserID,
+	}
+	if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
+		return err
+	}
+	if err := r.db.Create(registration).Error; err != nil {
+		return err
+	}
+	return r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
 }
 func (r *competitionRepository) DeleteUserRegistration(registration *entity.Registration) error {
 	return r.db.Delete(registration).Error
