@@ -139,7 +139,7 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 			query = query.Where("deadline >= ?", *filter.After)
 		}
 	}
-	result := query.Find(&competitions)
+	result := query.Preload("Organizer").Find(&competitions)
 	if result.Error != nil {
 		filterJson, err := json.Marshal(filter)
 		if err != nil {

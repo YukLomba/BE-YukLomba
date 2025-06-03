@@ -56,11 +56,11 @@ type CompetitionResponse struct {
 // }
 
 type CompetitionFilter struct {
-	Title    *string    `query:"title" validate:"omitempty,min=3"`
-	Type     *string    `query:"type" validate:"omitempty"`
-	Category *string    `query:"category" validate:"omitempty"`
-	Before   *time.Time `query:"before" validate:"omitempty"` // untuk deadline sebelum tanggal tertentu
-	After    *time.Time `query:"after" validate:"omitempty"`  // untuk deadline setelah tanggal tertentu
+	Title    *string    `query:"title" validate:"min=3"`
+	Type     *string    `query:"type"`
+	Category *string    `query:"category"`
+	Before   *time.Time `query:"before"` // untuk deadline sebelum tanggal tertentu
+	After    *time.Time `query:"after"`  // untuk deadline setelah tanggal tertentu
 }
 
 type CompetitionShort struct {
