@@ -62,13 +62,13 @@ func (c *CompetitionController) CreateCompetition(ctx *fiber.Ctx) error {
 		errors := util.GenerateValidationErrorMessage(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors})
 	}
-	user := util.GetAuthInfo(ctx)
+	authInfo := util.GetAuthInfo(ctx)
 
-	*req.OrganizerID = *user.OrganizationID
+	*req.OrganizerID = *authInfo.OrganizationID
 
 	competition := mapper.ToCompetitionFromCreate(req)
 
-	if err := c.competitionService.CreateCompetition(user, competition); err != nil {
+	if err := c.competitionService.CreateCompetition(authInfo, competition); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competition"})
 	}
 
@@ -85,11 +85,11 @@ func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
 		errors := util.GenerateValidationErrorMessage(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors})
 	}
-	user := util.GetAuthInfo(ctx)
+	authInfo := util.GetAuthInfo(ctx)
 
 	competitions := mapper.ToCompetitionsFromCreate(req.Competitions)
 
-	notValidMessage, err := c.competitionService.CreateManyCompetitition(user, competitions)
+	notValidMessage, err := c.competitionService.CreateManyCompetitition(authInfo, competitions)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competitions"})
@@ -115,11 +115,11 @@ func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	user := util.GetAuthInfo(ctx)
+	authInfo := util.GetAuthInfo(ctx)
 
 	competition := mapper.ToCompetitionFromUpdate(req, id)
 
-	if err := c.competitionService.UpdateCompetition(user, competition); err != nil {
+	if err := c.competitionService.UpdateCompetition(authInfo, competition); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update competition"})
 	}
 
@@ -132,9 +132,9 @@ func (c *CompetitionController) DeleteCompetition(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	user := util.GetAuthInfo(ctx)
+	authInfo := util.GetAuthInfo(ctx)
 
-	if err := c.competitionService.DeleteCompetition(user, CompetitionId); err != nil {
+	if err := c.competitionService.DeleteCompetition(authInfo, CompetitionId); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete competition"})
 	}
 
@@ -161,9 +161,9 @@ func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	user := util.GetAuthInfo(ctx)
+	authInfo := util.GetAuthInfo(ctx)
 
-	if err := c.competitionService.RegisterUserToCompetition(user, competitionID); err != nil {
+	if err := c.competitionService.RegisterUserToCompetition(authInfo, competitionID); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to register for competition"})
 	}
 
