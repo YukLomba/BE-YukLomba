@@ -170,7 +170,15 @@ func (r *competitionRepository) CreateUserRegistration(registration *entity.Regi
 	// if err := r.db.Create(registration).Error; err != nil {
 	// 	return err
 	// }
-	return r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
+	err := r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
+	if err != nil {
+		slog.Error("Error registering user to competition:",
+			"registration", registration,
+			"error", err,
+		)
+		return err
+	}
+	return nil
 }
 func (r *competitionRepository) DeleteUserRegistration(registration *entity.Registration) error {
 	return r.db.Delete(registration).Error
@@ -179,6 +187,11 @@ func (r *competitionRepository) FindUserRegistration(competitionID uuid.UUID, us
 	var registration entity.Registration
 	result := r.db.Where("competition_id = ? AND user_id = ?", competitionID, userID).First(&registration)
 	if result.Error != nil {
+		slog.Error("Error finding registration:",
+			"competitionID", competitionID,
+			"userID", userID,
+			"error", result.Error,
+		)
 		return nil, result.Error
 	}
 	return &registration, nil
