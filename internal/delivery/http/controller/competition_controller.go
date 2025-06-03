@@ -20,46 +20,6 @@ func NewCompetitionController(
 	}
 }
 
-<<<<<<< HEAD
-=======
-// parseUUIDParam parses UUID from path param and returns error if invalid/missing
-func parseUUIDParam(ctx *fiber.Ctx, param string) (uuid.UUID, error) {
-	id := ctx.Params(param)
-	if id == "" {
-		return uuid.Nil, fmt.Errorf("missing '%s' parameter", param)
-	}
-	parsedID, err := uuid.Parse(id)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid UUID format for '%s'", param)
-	}
-	return parsedID, nil
-}
-
-// getUserFromCtx fetches user from context locals ("userID")
-func (c *CompetitionController) getUserFromCtx(ctx *fiber.Ctx) (*entity.User, error) {
-	rawUserID := ctx.Locals("user_id")
-	userID, ok := rawUserID.(uuid.UUID)
-	if !ok {
-		return nil, errors.New("unauthorized: user ID missing or invalid in context")
-	}
-	user, err := c.userService.GetUser(userID)
-	if err != nil {
-		return nil, errors.New("unauthorized: user not found")
-	}
-	return user, nil
-}
-
-// isAuthorizedOrganizer checks if user is organizer and belongs to given organization ID
-func (c *CompetitionController) isAuthorizedOrganizer(user *entity.User, organizerID uuid.UUID) bool {
-	return user.Role == "organizer" && user.OrganizationID != nil && *user.OrganizationID == organizerID
-}
-
-// validateDeadlineFuture checks if deadline is a future date
-func validateDeadlineFuture(deadline time.Time) bool {
-	return deadline.After(time.Now())
-}
-
->>>>>>> 1bd5af4ee5e8e1f2026e1d03fdaa95a18c46e8b9
 // GetCompetition retrieves a competition by ID
 func (c *CompetitionController) GetCompetition(ctx *fiber.Ctx) error {
 	id, err := util.ParseCtxParam(ctx, "id")
