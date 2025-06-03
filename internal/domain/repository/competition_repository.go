@@ -16,4 +16,5 @@ type CompetitionRepository interface {
 	CreateUserRegistration(registration *entity.Registration) error
 	FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error)
 	FindWithFilter(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
+	FindUserRegistration(competitionID uuid.UUID, userID uuid.UUID) (*entity.Registration, error)
 }

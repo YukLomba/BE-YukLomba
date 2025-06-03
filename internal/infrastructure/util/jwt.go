@@ -5,16 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
 // JWTClaims represents the claims in the JWT token
 type JWTClaims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
-	Role   string    `json:"role"`
+	UserID         uuid.UUID  `json:"user_id"`
+	Email          string     `json:"email"`
+	Role           string     `json:"role"`
+	OrganizationID *uuid.UUID `json:"organization,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -36,6 +39,9 @@ func GenerateToken(user *entity.User, jwtSecret string, expiry time.Duration) (s
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			Subject:   user.ID.String(),
 		},
+	}
+	if user.Organization != nil {
+		claims.OrganizationID = user.OrganizationID
 	}
 
 	// Create token
@@ -71,4 +77,13 @@ func ValidateToken(tokenString string, jwtSecret string) (*JWTClaims, error) {
 	}
 
 	return nil, errors.New("invalid token")
+}
+
+// helper to get ctx.locals
+func GetAuthInfo(ctx *fiber.Ctx) *dto.AuthInfo {
+	AuthInfo := new(dto.AuthInfo)
+	AuthInfo.ID = ctx.Locals("user_id").(uuid.UUID)
+	AuthInfo.Role = ctx.Locals("role").(string)
+	AuthInfo.OrganizationID = ctx.Locals("organization_id").(*uuid.UUID)
+	return AuthInfo
 }

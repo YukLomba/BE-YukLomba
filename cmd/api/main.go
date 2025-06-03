@@ -53,9 +53,9 @@ func main() {
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)
-	competitionController := controller.NewCompetitionController(competitionService, userService)
+	competitionController := controller.NewCompetitionController(competitionService)
 	authController := controller.NewAuthController(authService)
-	organizationController := controller.NewOrganizationController(organizationService, userService)
+	organizationController := controller.NewOrganizationController(organizationService)
 
 	app := fiber.New(fiber.Config{
 		AppName: "YukLomba API",

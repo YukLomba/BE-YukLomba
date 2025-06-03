@@ -161,3 +161,14 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 func (r *competitionRepository) CreateUserRegistration(registration *entity.Registration) error {
 	return r.db.Create(registration).Error
 }
+func (r *competitionRepository) DeleteUserRegistration(registration *entity.Registration) error {
+	return r.db.Delete(registration).Error
+}
+func (r *competitionRepository) FindUserRegistration(competitionID uuid.UUID, userID uuid.UUID) (*entity.Registration, error) {
+	var registration entity.Registration
+	result := r.db.Where("competition_id = ? AND user_id = ?", competitionID, userID).First(&registration)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &registration, nil
+}

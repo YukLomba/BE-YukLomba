@@ -1,72 +1,28 @@
 package controller
 
 import (
-	"errors"
-	"fmt"
-	"time"
-
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
-	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
+	"github.com/YukLomba/BE-YukLomba/internal/domain/mapper"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 )
 
 type CompetitionController struct {
 	competitionService service.CompetitionService
-	userService        service.UserService
 }
 
 func NewCompetitionController(
 	competitionService service.CompetitionService,
-	userService service.UserService,
 ) *CompetitionController {
 	return &CompetitionController{
 		competitionService: competitionService,
-		userService:        userService,
 	}
-}
-
-// parseUUIDParam parses UUID from path param and returns error if invalid/missing
-func parseUUIDParam(ctx *fiber.Ctx, param string) (uuid.UUID, error) {
-	id := ctx.Params(param)
-	if id == "" {
-		return uuid.Nil, fmt.Errorf("missing '%s' parameter", param)
-	}
-	parsedID, err := uuid.Parse(id)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid UUID format for '%s'", param)
-	}
-	return parsedID, nil
-}
-
-// getUserFromCtx fetches user from context locals ("userID")
-func (c *CompetitionController) getUserFromCtx(ctx *fiber.Ctx) (*entity.User, error) {
-	rawUserID := ctx.Locals("userID")
-	userID, ok := rawUserID.(uuid.UUID)
-	if !ok {
-		return nil, errors.New("unauthorized: user ID missing or invalid in context")
-	}
-	user, err := c.userService.GetUser(userID)
-	if err != nil {
-		return nil, errors.New("unauthorized: user not found")
-	}
-	return user, nil
-}
-
-// isAuthorizedOrganizer checks if user is organizer and belongs to given organization ID
-func (c *CompetitionController) isAuthorizedOrganizer(user *entity.User, organizerID uuid.UUID) bool {
-	return user.Role == "organizer" && user.OrganizationID != nil && *user.OrganizationID == organizerID
-}
-
-// validateDeadlineFuture checks if deadline is a future date
-func validateDeadlineFuture(deadline time.Time) bool {
-	return deadline.After(time.Now())
 }
 
 // GetCompetition retrieves a competition by ID
 func (c *CompetitionController) GetCompetition(ctx *fiber.Ctx) error {
-	id, err := parseUUIDParam(ctx, "id")
+	id, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -76,7 +32,9 @@ func (c *CompetitionController) GetCompetition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Competition not found"})
 	}
 
-	return ctx.JSON(fiber.Map{"data": competition})
+	response := mapper.ToCompetitionResponse(competition)
+
+	return ctx.JSON(response)
 }
 
 // GetAllCompetitions retrieves all competitions
@@ -89,7 +47,8 @@ func (c *CompetitionController) GetAllCompetitions(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch competitions"})
 	}
-	return ctx.JSON(fiber.Map{"data": competitions})
+	response := mapper.ToCompetitionsResponse(competitions)
+	return ctx.JSON(response)
 }
 
 // CreateCompetition creates a new competition
@@ -99,22 +58,17 @@ func (c *CompetitionController) CreateCompetition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	if !validateDeadlineFuture(req.Deadline) {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Deadline must be a future date"})
+	if err := util.ValidateStruct(req); err != nil {
+		errors := util.GenerateValidationErrorMessage(err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors})
 	}
-
-	user, err := c.getUserFromCtx(ctx)
-	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	if user.Role != "organizer" || user.OrganizationID == nil {
-		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "User is not authorized to create competition"})
-	}
+	user := util.GetAuthInfo(ctx)
 
 	*req.OrganizerID = *user.OrganizationID
 
-	if err := c.competitionService.CreateCompetition(req); err != nil {
+	competition := mapper.ToCompetitionFromCreate(req)
+
+	if err := c.competitionService.CreateCompetition(user, competition); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competition"})
 	}
 
@@ -127,7 +81,16 @@ func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	notValidMessage, err := c.competitionService.CreateManyCompetitition(req)
+	if err := util.ValidateStruct(req); err != nil {
+		errors := util.GenerateValidationErrorMessage(err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors})
+	}
+	user := util.GetAuthInfo(ctx)
+
+	competitions := mapper.ToCompetitionsFromCreate(req.Competitions)
+
+	notValidMessage, err := c.competitionService.CreateManyCompetitition(user, competitions)
+
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competitions"})
 	}
@@ -142,7 +105,7 @@ func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
 
 // UpdateCompetition updates an existing competition
 func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
-	id, err := parseUUIDParam(ctx, "id")
+	id, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -152,25 +115,11 @@ func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
 	}
 
-	existingCompetition, err := c.competitionService.GetCompetition(id)
-	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Competition not found"})
-	}
+	user := util.GetAuthInfo(ctx)
 
-	user, err := c.getUserFromCtx(ctx)
-	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
-	}
+	competition := mapper.ToCompetitionFromUpdate(req, id)
 
-	if !c.isAuthorizedOrganizer(user, existingCompetition.Organizer.ID) {
-		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "User not authorized to update this competition"})
-	}
-
-	if !validateDeadlineFuture(req.Deadline) {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Deadline must be a future date"})
-	}
-
-	if err := c.competitionService.UpdateCompetition(id, req); err != nil {
+	if err := c.competitionService.UpdateCompetition(user, competition); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update competition"})
 	}
 
@@ -179,26 +128,13 @@ func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
 
 // DeleteCompetition deletes a competition by ID
 func (c *CompetitionController) DeleteCompetition(ctx *fiber.Ctx) error {
-	id, err := parseUUIDParam(ctx, "id")
+	CompetitionId, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+	user := util.GetAuthInfo(ctx)
 
-	competition, err := c.competitionService.GetCompetition(id)
-	if err != nil {
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Competition not found"})
-	}
-
-	user, err := c.getUserFromCtx(ctx)
-	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	if !c.isAuthorizedOrganizer(user, competition.Organizer.ID) {
-		return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "User not authorized to delete this competition"})
-	}
-
-	if err := c.competitionService.DeleteCompetition(id); err != nil {
+	if err := c.competitionService.DeleteCompetition(user, CompetitionId); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete competition"})
 	}
 
@@ -207,7 +143,7 @@ func (c *CompetitionController) DeleteCompetition(ctx *fiber.Ctx) error {
 
 // GetCompetitionsByOrganizer retrieves competitions by organizer ID
 func (c *CompetitionController) GetCompetitionsByOrganizer(ctx *fiber.Ctx) error {
-	id, err := parseUUIDParam(ctx, "id")
+	id, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -221,18 +157,13 @@ func (c *CompetitionController) GetCompetitionsByOrganizer(ctx *fiber.Ctx) error
 }
 
 func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {
-	competitionID, err := parseUUIDParam(ctx, "id")
+	competitionID, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+	user := util.GetAuthInfo(ctx)
 
-	user, err := c.getUserFromCtx(ctx)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	if err := c.competitionService.RegisterUserToCompetition(user.ID, competitionID); err != nil {
+	if err := c.competitionService.RegisterUserToCompetition(user, competitionID); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to register for competition"})
 	}
 

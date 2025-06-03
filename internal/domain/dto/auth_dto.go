@@ -1,5 +1,7 @@
 package dto
 
+import "github.com/google/uuid"
+
 // LoginRequest represents the login request data
 type LoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`
@@ -39,4 +41,11 @@ type GoogleTokenResponse struct {
 	Scope        string `json:"scope"`
 	TokenType    string `json:"token_type"`
 	IDToken      string `json:"id_token"`
+}
+
+type AuthInfo struct {
+	ID             uuid.UUID
+	Username       string
+	Role           string
+	OrganizationID *uuid.UUID
 }

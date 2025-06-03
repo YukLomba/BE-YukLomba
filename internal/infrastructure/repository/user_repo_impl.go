@@ -80,7 +80,7 @@ func (r userRepository) Create(user *entity.User) error {
 // FindAll implements repository.UserRepository.1
 func (r userRepository) FindAll() ([]*entity.User, error) {
 	var users []*entity.User
-	result := r.db.Preload("JoinedCompetitions").Find(&users)
+	result := r.db.Preload("Organization").Preload("JoinedCompetitions.Organizer").Find(&users)
 	if result.Error != nil {
 		slog.Error("Error finding all users:",
 			"error", result.Error,
@@ -93,8 +93,8 @@ func (r userRepository) FindAll() ([]*entity.User, error) {
 // FindByID implements repository.UserRepository.
 func (r userRepository) FindByID(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
-	result := r.db.Preload("OrganizedCompetitions").
-		Preload("JoinedCompetitions").
+	result := r.db.Preload("Organization").
+		Preload("JoinedCompetitions.Organizer").
 		First(&user, id)
 	if result.Error != nil {
 		slog.Error("Error finding user by ID:",

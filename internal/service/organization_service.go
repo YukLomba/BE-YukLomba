@@ -1,18 +1,27 @@
 package service
 
 import (
+	"errors"
+	"slices"
+
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
+	errs "github.com/YukLomba/BE-YukLomba/internal/domain/error"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
 )
 
+var (
+	ErrOrganizationNotFound = errors.New("organization not found")
+	ErrOrganizationExists   = errors.New("organization already exists")
+)
+
 type OrganizationService interface {
-	GetOrganization(id uuid.UUID) (*dto.OrganizationResponse, error)
-	GetAllOrganizations() (*dto.OrganizationListResponse, error)
-	CreateOrganization(org *dto.OrganizationCreateRequest) error
-	UpdateOrganization(id uuid.UUID, org *dto.OrganizationUpdateRequest) error
-	DeleteOrganization(id uuid.UUID) error
+	GetOrganization(id uuid.UUID) (*entity.Organization, error)
+	GetAllOrganizations() ([]*entity.Organization, error)
+	CreateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
+	UpdateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
+	DeleteOrganization(id uuid.UUID, authInfo *dto.AuthInfo) error
 }
 
 type OrganizationServiceImpl struct {
@@ -25,62 +34,79 @@ func NewOrganizationService(orgRepo repository.OrganizationRepository) Organizat
 	}
 }
 
-func (s *OrganizationServiceImpl) GetOrganization(id uuid.UUID) (*dto.OrganizationResponse, error) {
+func (s *OrganizationServiceImpl) GetOrganization(id uuid.UUID) (*entity.Organization, error) {
 	org, err := s.orgRepo.FindByID(id)
 	if err != nil {
-		return nil, err
+		return nil, errs.ErrInternalServer
 	}
-	return s.toOrganizationResponse(org), nil
+	if org == nil {
+		return nil, ErrOrganizationNotFound
+	}
+	return org, nil
 }
 
-func (s *OrganizationServiceImpl) GetAllOrganizations() (*dto.OrganizationListResponse, error) {
+func (s *OrganizationServiceImpl) GetAllOrganizations() ([]*entity.Organization, error) {
 	orgs, err := s.orgRepo.FindAll()
 	if err != nil {
-		return nil, err
+		return nil, errs.ErrInternalServer
 	}
-
-	response := &dto.OrganizationListResponse{
-		Total: len(orgs),
-	}
-	for _, org := range orgs {
-		response.Organizations = append(response.Organizations, *s.toOrganizationResponse(org))
-	}
-	return response, nil
+	return orgs, nil
 }
 
-func (s *OrganizationServiceImpl) CreateOrganization(org *dto.OrganizationCreateRequest) error {
-	entity := &entity.Organization{
-		Name:        org.Name,
-		Logo:        org.Logo,
-		Description: org.Description,
+func (s *OrganizationServiceImpl) CreateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error {
+	authorizedRoles := []string{"admin", "organizer"}
+	if slices.Contains(authorizedRoles, authInfo.Role) {
+		return errs.ErrUnauthorized
 	}
-	return s.orgRepo.Create(entity)
+	if err := s.orgRepo.Create(org); err != nil {
+		return errs.ErrInternalServer
+	}
+	return nil
 }
 
-func (s *OrganizationServiceImpl) UpdateOrganization(id uuid.UUID, org *dto.OrganizationUpdateRequest) error {
-	existing, err := s.orgRepo.FindByID(id)
+func (s *OrganizationServiceImpl) UpdateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error {
+	authorizedRoles := []string{"admin", "organizer"}
+	if slices.Contains(authorizedRoles, authInfo.Role) {
+		return errs.ErrUnauthorized
+	}
+	if *authInfo.OrganizationID != org.ID || authInfo.Role != "admin" {
+		return errs.ErrUnauthorized
+	}
+	org, err := s.orgRepo.FindByID(org.ID)
 	if err != nil {
-		return err
+		return errs.ErrInternalServer
+	}
+	if org == nil {
+		return ErrOrganizationNotFound
 	}
 
-	existing.Name = org.Name
-	existing.Logo = org.Logo
-	existing.Description = org.Description
-
-	return s.orgRepo.Update(existing)
-}
-
-func (s *OrganizationServiceImpl) DeleteOrganization(id uuid.UUID) error {
-	return s.orgRepo.Delete(id)
-}
-
-func (s *OrganizationServiceImpl) toOrganizationResponse(org *entity.Organization) *dto.OrganizationResponse {
-	return &dto.OrganizationResponse{
-		ID:          org.ID,
-		Name:        org.Name,
-		Logo:        org.Logo,
-		Description: org.Description,
-		CreatedAt:   org.CreatedAt,
-		UpdatedAt:   org.UpdatedAt,
+	if err := s.orgRepo.Update(org); err != nil {
+		return errs.ErrInternalServer
 	}
+	return nil
+}
+
+func (s *OrganizationServiceImpl) DeleteOrganization(id uuid.UUID, authInfo *dto.AuthInfo) error {
+	authorizedRoles := []string{"admin", "organizer"}
+	if slices.Contains(authorizedRoles, authInfo.Role) {
+		return errs.ErrUnauthorized
+	}
+	if *authInfo.OrganizationID != id || authInfo.Role != "admin" {
+		return errs.ErrUnauthorized
+	}
+
+	org, err := s.orgRepo.FindByID(id)
+
+	if err != nil {
+		return errs.ErrInternalServer
+
+	}
+	if org == nil {
+		return ErrOrganizationNotFound
+	}
+
+	if err := s.orgRepo.Delete(id); err != nil {
+		return errs.ErrInternalServer
+	}
+	return nil
 }
