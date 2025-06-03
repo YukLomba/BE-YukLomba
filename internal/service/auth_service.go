@@ -179,10 +179,12 @@ func (s *AuthServiceImpl) CompleteRegistration(userID uuid.UUID, role string) (*
 	}
 
 	// Update role
-	user.Role = role
+	data := &map[string]interface{}{
+		"role": role,
+	}
 
 	// Save updated user
-	if err := s.userRepo.Update(user); err != nil {
+	if err := s.userRepo.Update(user.ID, data); err != nil {
 		return nil, err
 	}
 

@@ -107,12 +107,12 @@ func (r userRepository) FindByID(id uuid.UUID) (*entity.User, error) {
 }
 
 // Update implements repository.UserRepository.
-func (r userRepository) Update(user *entity.User) error {
-	result := r.db.Save(user)
+func (r userRepository) Update(userID uuid.UUID, data *map[string]interface{}) error {
+	result := r.db.Model(&entity.User{}).Where("id = ?", userID).Updates(data)
 
 	if result.Error != nil {
 		slog.Error("Error updating user:",
-			"user", user,
+			"userID", userID,
 			"error", result.Error,
 		)
 		return result.Error
@@ -120,7 +120,7 @@ func (r userRepository) Update(user *entity.User) error {
 
 	if result.RowsAffected == 0 {
 		slog.Warn("No rows were updated for user:",
-			"user", user,
+			"userID", userID,
 		)
 		return gorm.ErrRecordNotFound
 	}

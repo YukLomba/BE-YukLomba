@@ -3,7 +3,6 @@ package mapper
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
-	"github.com/google/uuid"
 )
 
 func ToUserResponse(user *entity.User) *dto.UserResponse {
@@ -30,20 +29,22 @@ func ToUsersResponse(users []*entity.User) []*dto.UserResponse {
 	return usersResponse
 }
 
-func ToUserWithID(dto *dto.UserProfileUpdate, id uuid.UUID) *entity.User {
-	user := new(entity.User)
-	user.ID = id
+func MapUserUpdate(dto *dto.UserProfileUpdate) *map[string]interface{} {
+	userMap := make(map[string]interface{})
 	if dto.Username != nil {
-		user.Username = *dto.Username
+		userMap["username"] = dto.Username
 	}
 	if dto.Email != nil {
-		user.Email = *dto.Email
+		userMap["email"] = dto.Email
 	}
 	if dto.University != nil {
-		user.University = *dto.University
+		userMap["university"] = dto.University
 	}
 	if dto.Interests != nil {
-		user.Interests = *dto.Interests
+		userMap["interests"] = dto.Interests
 	}
-	return user
+	if dto.Password != nil {
+		userMap["password"] = dto.Password
+	}
+	return &userMap
 }

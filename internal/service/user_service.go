@@ -18,7 +18,7 @@ type UserService interface {
 	GetUser(id uuid.UUID) (*entity.User, error)
 	GetAllUsers() ([]*entity.User, error)
 	CreateUser(user *entity.User) error
-	UpdateUser(req *entity.User) error
+	UpdateUser(id uuid.UUID, data *map[string]interface{}) error
 	GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error)
 }
 
@@ -82,15 +82,15 @@ func (u *UserServiceImpl) GetUser(id uuid.UUID) (*entity.User, error) {
 }
 
 // UpdateUser implements UserService.
-func (u *UserServiceImpl) UpdateUser(user *entity.User) error {
-	existing, err := u.userRepo.FindByID(user.ID)
+func (u *UserServiceImpl) UpdateUser(id uuid.UUID, data *map[string]interface{}) error {
+	existing, err := u.userRepo.FindByID(id)
 	if err != nil {
 		return errs.ErrInternalServer
 	}
 	if existing == nil {
 		return errs.ErrNotFound
 	}
-	err = u.userRepo.Update(user)
+	err = u.userRepo.Update(id, data)
 	if err != nil {
 		return errs.ErrInternalServer
 	}

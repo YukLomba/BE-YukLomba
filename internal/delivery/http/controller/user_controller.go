@@ -109,9 +109,9 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 			"errors": errors, // Direct usage, no dereferencing needed
 		})
 	}
-	user := mapper.ToUserWithID(userData, id)
+	data := mapper.MapUserUpdate(userData)
 
-	if err := h.userService.UpdateUser(user); err != nil {
+	if err := h.userService.UpdateUser(id, data); err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
