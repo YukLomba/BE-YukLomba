@@ -163,12 +163,13 @@ func (r *competitionRepository) CreateUserRegistration(registration *entity.Regi
 	user := &entity.User{
 		ID: registration.UserID,
 	}
-	if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
-		return err
-	}
-	if err := r.db.Create(registration).Error; err != nil {
-		return err
-	}
+	// double insert
+	// if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
+	// 	return err
+	// }
+	// if err := r.db.Create(registration).Error; err != nil {
+	// 	return err
+	// }
 	return r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
 }
 func (r *competitionRepository) DeleteUserRegistration(registration *entity.Registration) error {
