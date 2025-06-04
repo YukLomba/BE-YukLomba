@@ -174,14 +174,12 @@ func (c *AuthController) CompleteRegistration(ctx *fiber.Ctx) error {
 // GetProfile returns the authenticated user's profile
 func (c *AuthController) GetProfile(ctx *fiber.Ctx) error {
 	// Get user ID from context (set by auth middleware)
-	userID := ctx.Locals("user_id")
-	email := ctx.Locals("email")
-	role := ctx.Locals("role")
+	authInfo := util.GetAuthInfo(ctx)
 
 	// Return user profile
 	return ctx.JSON(fiber.Map{
-		"id":    userID,
-		"email": email,
-		"role":  role,
+		"id":           authInfo.ID,
+		"organization": authInfo.OrganizationID,
+		"role":         authInfo.Role,
 	})
 }

@@ -45,7 +45,6 @@ type GoogleTokenResponse struct {
 
 type AuthInfo struct {
 	ID             uuid.UUID
-	Username       string
 	Role           string
 	OrganizationID *uuid.UUID
 }
