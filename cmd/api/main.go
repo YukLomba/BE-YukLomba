@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/controller"
+	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/middleware"
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/router"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/config"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/database"
@@ -58,6 +59,9 @@ func main() {
 	authController := controller.NewAuthController(authService)
 	organizationController := controller.NewOrganizationController(organizationService)
 
+	// Initialize AuthMiddleware
+	authMiddlware := middleware.AuthMiddleware(userService)
+
 	app := fiber.New(fiber.Config{
 		AppName: "YukLomba API",
 	})
@@ -74,10 +78,10 @@ func main() {
 	api := app.Group("/api")
 
 	// Setup routes
-	router.SetupUserRoute(api, userController)
-	router.SetupCompetitionRoute(api, competitionController)
-	router.SetupAuthRoute(api, authController)
-	router.SetupOrganizationRoute(api, organizationController)
+	router.SetupUserRoute(api, userController, &authMiddlware)
+	router.SetupCompetitionRoute(api, competitionController, &authMiddlware)
+	router.SetupAuthRoute(api, authController, &authMiddlware)
+	router.SetupOrganizationRoute(api, organizationController, &authMiddlware)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.Server.Port))
 }

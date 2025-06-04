@@ -13,6 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
+var (
+	ErrInvalidRole = errors.New("invalid role")
+)
+
 // AuthService defines the authentication service interface
 type AuthService interface {
 	Register(req *dto.RegisterRequest) (*entity.User, error)
@@ -60,6 +64,9 @@ func (s *AuthServiceImpl) Register(req *dto.RegisterRequest) (*entity.User, erro
 	// Set default role
 	role := "pending"
 	if req.Role != nil {
+		if *req.Role != "student" && *req.Role != "organizer" {
+			return nil, ErrInvalidRole
+		}
 		role = *req.Role
 	}
 

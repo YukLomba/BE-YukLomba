@@ -2,12 +2,11 @@ package router
 
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/controller"
-	"github.com/YukLomba/BE-YukLomba/internal/delivery/http/middleware"
 	"github.com/gofiber/fiber/v2"
 )
 
 // SetupAuthRoute sets up the authentication routes
-func SetupAuthRoute(router fiber.Router, authController *controller.AuthController) {
+func SetupAuthRoute(router fiber.Router, authController *controller.AuthController, authMiddleware *fiber.Handler) {
 	auth := router.Group("/auth")
 
 	// Public routes
@@ -18,5 +17,5 @@ func SetupAuthRoute(router fiber.Router, authController *controller.AuthControll
 	auth.Post("/complete-registration", authController.CompleteRegistration)
 
 	// Protected routes
-	auth.Get("/profile", middleware.AuthMiddleware(), authController.GetProfile)
+	auth.Get("/profile", *authMiddleware, authController.GetProfile)
 }

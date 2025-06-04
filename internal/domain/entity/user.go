@@ -15,6 +15,7 @@ type User struct {
 	Role               string         `json:"role"`
 	University         string         `json:"university"`
 	Interests          string         `json:"interests"`
+	PasswordChangedAt  time.Time      `json:"password_changed_at" gorm:"autoCreateTime"`
 	CreatedAt          time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt          time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	OrganizationID     *uuid.UUID     `json:"organization_id"`

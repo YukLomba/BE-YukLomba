@@ -1,19 +1,22 @@
 package middleware
 
 import (
+	"log"
 	"strings"
 
 	"slices"
 
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/config"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
+	"github.com/YukLomba/BE-YukLomba/internal/service"
 	"github.com/gofiber/fiber/v2"
 )
 
 // AuthMiddleware is a middleware for JWT authentication
-func AuthMiddleware() fiber.Handler {
+func AuthMiddleware(service service.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get authorization header
+		log.Println("AuthMiddleware is called")
 		authHeader := c.Get("Authorization")
 		if authHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -39,6 +42,25 @@ func AuthMiddleware() fiber.Handler {
 				"error": "Invalid or expired token",
 			})
 		}
+		user, err := service.GetUser(claims.UserID)
+
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		}
+
+		if user == nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		}
+
+		if user.PasswordChangedAt.After(claims.IssuedAt.Time) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Password changed, please login again",
+			})
+		}
 
 		if claims.Role == "pending" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -48,7 +70,6 @@ func AuthMiddleware() fiber.Handler {
 
 		// Set user information in the context
 		c.Locals("user_id", claims.UserID)
-		c.Locals("email", claims.Email)
 		c.Locals("role", claims.Role)
 		c.Locals("organization_id", claims.OrganizationID)
 

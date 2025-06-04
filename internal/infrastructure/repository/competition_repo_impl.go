@@ -164,12 +164,12 @@ func (r *competitionRepository) CreateUserRegistration(registration *entity.Regi
 		ID: registration.UserID,
 	}
 	// double insert
-	// if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
-	// 	return err
-	// }
-	// if err := r.db.Create(registration).Error; err != nil {
-	// 	return err
-	// }
+	if err := r.db.First(&competition, registration.CompetitionID).Error; err != nil {
+		return err
+	}
+	if err := r.db.Create(registration).Error; err != nil {
+		return err
+	}
 	err := r.db.Model(&user).Association("JoinedCompetitions").Append(&competition)
 	if err != nil {
 		slog.Error("Error registering user to competition:",

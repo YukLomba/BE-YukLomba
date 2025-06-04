@@ -2,10 +2,12 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	errs "github.com/YukLomba/BE-YukLomba/internal/domain/error"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
+	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/google/uuid"
 )
 
@@ -89,6 +91,14 @@ func (u *UserServiceImpl) UpdateUser(id uuid.UUID, data *map[string]interface{})
 	}
 	if existing == nil {
 		return errs.ErrNotFound
+	}
+	if val, ok := (*data)["password"]; ok {
+		// log.Println(val)
+		(*data)["password"], err = util.HashPassword(val.(string))
+		(*data)["password_changed_at"] = time.Now()
+		if err != nil {
+			return errs.ErrInternalServer
+		}
 	}
 	err = u.userRepo.Update(id, data)
 	if err != nil {

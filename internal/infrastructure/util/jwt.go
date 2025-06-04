@@ -15,7 +15,6 @@ import (
 // JWTClaims represents the claims in the JWT token
 type JWTClaims struct {
 	UserID         uuid.UUID  `json:"user_id"`
-	Email          string     `json:"email"`
 	Role           string     `json:"role"`
 	OrganizationID *uuid.UUID `json:"organization,omitempty"`
 	jwt.RegisteredClaims
@@ -32,7 +31,6 @@ func GenerateToken(user *entity.User, jwtSecret string, expiry time.Duration) (s
 	// Create claims
 	claims := &JWTClaims{
 		UserID: user.ID,
-		Email:  user.Email,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),

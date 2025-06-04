@@ -6,8 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupUserRoute(router fiber.Router, userController *controller.UserController) {
-	users := router.Group("/users", middleware.AuthMiddleware())
+func SetupUserRoute(router fiber.Router, userController *controller.UserController, authMiddleware *fiber.Handler) {
+	users := router.Group("/users", *authMiddleware)
 	users.Get("/", userController.GetAllUsers, middleware.RoleMiddleware("admin"))
 	users.Get("/:id", userController.GetUser)
 	users.Get("/:id/registrations", userController.GetAllUserPastCompetition)

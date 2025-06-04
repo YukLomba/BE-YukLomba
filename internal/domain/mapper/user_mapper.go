@@ -32,19 +32,19 @@ func ToUsersResponse(users []*entity.User) []*dto.UserResponse {
 func MapUserUpdate(dto *dto.UserProfileUpdate) *map[string]interface{} {
 	userMap := make(map[string]interface{})
 	if dto.Username != nil {
-		userMap["username"] = dto.Username
+		userMap["username"] = *dto.Username
 	}
 	if dto.Email != nil {
-		userMap["email"] = dto.Email
+		userMap["email"] = *dto.Email
 	}
 	if dto.University != nil {
-		userMap["university"] = dto.University
+		userMap["university"] = *dto.University
 	}
 	if dto.Interests != nil {
-		userMap["interests"] = dto.Interests
+		userMap["interests"] = *dto.Interests
 	}
 	if dto.Password != nil {
-		userMap["password"] = dto.Password
+		userMap["password"] = *dto.Password
 	}
 	return &userMap
 }

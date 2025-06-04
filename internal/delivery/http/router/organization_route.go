@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupOrganizationRoute(router fiber.Router, organizationController *controller.OrganizationController) {
+func SetupOrganizationRoute(router fiber.Router, organizationController *controller.OrganizationController, authMiddleware *fiber.Handler) {
 	organizations := router.Group("/organizations")
 
 	// public routes
@@ -17,7 +17,7 @@ func SetupOrganizationRoute(router fiber.Router, organizationController *control
 	organizations.Get("/:id", organizationController.GetOrganization)
 
 	// protected routes
-	protected := organizations.Use(middleware.AuthMiddleware(), middleware.RoleMiddleware("admin"))
+	protected := organizations.Use(*authMiddleware, middleware.RoleMiddleware("admin"))
 
 	// Create new organization
 	protected.Post("/", organizationController.CreateOrganization)

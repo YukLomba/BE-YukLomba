@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func SetupCompetitionRoute(router fiber.Router, competitionController *controller.CompetitionController) {
+func SetupCompetitionRoute(router fiber.Router, competitionController *controller.CompetitionController, authMiddleware *fiber.Handler) {
 	competitions := router.Group("/competitions")
 
 	// public routes
@@ -20,10 +20,10 @@ func SetupCompetitionRoute(router fiber.Router, competitionController *controlle
 	competitions.Get("/organizer/:id", competitionController.GetCompetitionsByOrganizer)
 
 	// Register user to competition
-	competitions.Post("/:id/register", middleware.AuthMiddleware(), competitionController.RegisterToCompetition)
+	competitions.Post("/:id/register", *authMiddleware, competitionController.RegisterToCompetition)
 
 	// protected routes
-	protected := competitions.Use(middleware.AuthMiddleware(), middleware.RoleMiddleware("admin", "organizer"))
+	protected := competitions.Use(*authMiddleware, middleware.RoleMiddleware("admin", "organizer"))
 
 	// Create new competition
 	protected.Post("/", competitionController.CreateCompetition)
