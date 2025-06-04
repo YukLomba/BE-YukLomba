@@ -24,7 +24,7 @@ func NewCompetitionRepository(db *gorm.DB) repository.CompetitionRepository {
 // FindByID implements repository.CompetitionRepository.
 func (r *competitionRepository) FindByID(id uuid.UUID) (*entity.Competition, error) {
 	var competition entity.Competition
-	result := r.db.First(&competition, "id = ?", id)
+	result := r.db.Preload("Organizer").First(&competition, "id = ?", id)
 	if result.Error != nil {
 		slog.Error("Error finding competition by ID:",
 			"id", id,
@@ -74,11 +74,11 @@ func (r *competitionRepository) CreateMany(competition *[]entity.Competition) er
 }
 
 // Update implements repository.CompetitionRepository.
-func (r *competitionRepository) Update(competition *entity.Competition) error {
-	result := r.db.Save(competition)
+func (r *competitionRepository) Update(id uuid.UUID, data *map[string]interface{}) error {
+	result := r.db.Model(&entity.Competition{}).Where("id = ?", id).Updates(data)
 	if result.Error != nil {
 		slog.Error("Error updating competition:",
-			"competition", competition,
+			"competition", data,
 			"error", result.Error,
 		)
 		return result.Error
@@ -109,7 +109,7 @@ func (r *competitionRepository) Delete(id uuid.UUID) error {
 // FindByOrganizerID implements repository.CompetitionRepository.
 func (r *competitionRepository) FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error) {
 	var competitions []*entity.Competition
-	result := r.db.Find(&competitions, "organizer_id = ?", organizerID)
+	result := r.db.Preload("Organizer").Find(&competitions, "organizer_id = ?", organizerID)
 	if result.Error != nil {
 		slog.Error("Error finding competitions by organizer ID:",
 			"organizerID", organizerID,

@@ -116,10 +116,9 @@ func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
 	}
 
 	authInfo := util.GetAuthInfo(ctx)
+	data := mapper.ToCompetitionFromUpdate(req)
 
-	competition := mapper.ToCompetitionFromUpdate(req, id)
-
-	if err := c.competitionService.UpdateCompetition(authInfo, competition); err != nil {
+	if err := c.competitionService.UpdateCompetition(authInfo, id, data); err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update competition"})
 	}
 
@@ -152,8 +151,9 @@ func (c *CompetitionController) GetCompetitionsByOrganizer(ctx *fiber.Ctx) error
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch competitions"})
 	}
+	response := mapper.ToCompetitionsResponse(competitions)
 
-	return ctx.JSON(fiber.Map{"data": competitions})
+	return ctx.JSON(response)
 }
 
 func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {

@@ -22,7 +22,7 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 // FindByEmail implements repository.UserRepository.
 func (r userRepository) FindByEmail(email string) (*entity.User, error) {
 	var user entity.User
-	result := r.db.Where("email = ?", email).First(&user)
+	result := r.db.Preload("Organization").Where("email = ?", email).First(&user)
 	if result.Error != nil {
 		slog.Error("Error finding user by email:",
 			"email", email,

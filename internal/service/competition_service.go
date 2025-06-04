@@ -26,7 +26,7 @@ type CompetitionService interface {
 	GetAllCompetitions(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
 	CreateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error
 	CreateManyCompetitition(authInfo *dto.AuthInfo, competitions []*entity.Competition) (*[]string, error)
-	UpdateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error
+	UpdateCompetition(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error
 	DeleteCompetition(authInfo *dto.AuthInfo, id uuid.UUID) error
 	RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
 	GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error)
@@ -102,11 +102,22 @@ func (s *CompetitionServiceImpl) CreateManyCompetitition(authInfo *dto.AuthInfo,
 }
 
 // UpdateCompetition implements CompetitionService.
-func (s *CompetitionServiceImpl) UpdateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error {
-	if *authInfo.OrganizationID != competition.OrganizerID {
+func (s *CompetitionServiceImpl) UpdateCompetition(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error {
+	competition, err := s.competitionRepo.FindByID(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrCompetitionNotFound
+		default:
+			return errs.ErrInternalServer
+		}
+	}
+
+	if *(*authInfo).OrganizationID != competition.OrganizerID {
 		return ErrCompetitionNotBelongsToOrg
 	}
-	err := s.competitionRepo.Update(competition)
+
+	err = s.competitionRepo.Update(id, data)
 	if err != nil {
 		return errs.ErrInternalServer
 	}

@@ -3,7 +3,6 @@ package mapper
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
-	"github.com/google/uuid"
 )
 
 func ToCompetitionFromCreate(dto *dto.CompetitionCreateRequest) *entity.Competition {
@@ -25,34 +24,33 @@ func ToCompetitionsFromCreate(dto []*dto.CompetitionCreateRequest) []*entity.Com
 	return comps
 }
 
-func ToCompetitionFromUpdate(dto *dto.CompetitionUpdateRequest, id uuid.UUID) *entity.Competition {
-	comps := new(entity.Competition)
-	comps.ID = id
+func ToCompetitionFromUpdate(dto *dto.CompetitionUpdateRequest) *map[string]interface{} {
+	data := make(map[string]interface{})
 	if dto.Title != nil {
-		comps.Title = *dto.Title
+		data["title"] = *dto.Title
 	}
 	if dto.Type != nil {
-		comps.Type = *dto.Type
+		data["type"] = *dto.Type
 	}
 	if dto.Description != nil {
-		comps.Description = *dto.Description
+		data["description"] = *dto.Description
 	}
 	if dto.Image != nil {
-		comps.Image = dto.Image
+		data["image"] = dto.Image
 	}
 	if dto.Deadline != nil {
-		comps.Deadline = *dto.Deadline
+		data["image"] = *dto.Deadline
 	}
 	if dto.Category != nil {
-		comps.Category = *dto.Category
+		data["category"] = *dto.Category
 	}
 	if dto.EventLink != nil {
-		comps.EventLink = *dto.EventLink
+		data["event_link"] = *dto.EventLink
 	}
 	if dto.Results != nil {
-		comps.Results = *dto.Results
+		data["result"] = *dto.Results
 	}
-	return comps
+	return &data
 }
 
 func ToCompetitionResponse(competition *entity.Competition) *dto.CompetitionResponse {
