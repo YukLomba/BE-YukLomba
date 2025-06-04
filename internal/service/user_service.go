@@ -9,17 +9,16 @@ import (
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserNotFound = errors.New("user not found")
 )
 
 type UserService interface {
 	GetUser(id uuid.UUID) (*entity.User, error)
 	GetAllUsers() ([]*entity.User, error)
-	CreateUser(user *entity.User) error
 	UpdateUser(id uuid.UUID, data *map[string]interface{}) error
 	GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error)
 }
@@ -36,30 +35,20 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 
 // GetAllUserRegistration implements UserService.
 func (u *UserServiceImpl) GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error) {
-	user, err := u.userRepo.FindByID(id)
+	_, err := u.userRepo.FindByID(id)
 	if err != nil {
-		return nil, errs.ErrInternalServer
-	}
-	if user == nil {
-		return nil, ErrUserNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, ErrUserNotFound
+		default:
+			return nil, errs.ErrInternalServer
+		}
 	}
 	registrations, err := u.userRepo.FindAllRegistration(id)
 	if err != nil {
 		return nil, errs.ErrInternalServer
 	}
 	return registrations, nil
-}
-
-// CreateUser implements UserService.
-func (u *UserServiceImpl) CreateUser(user *entity.User) error {
-	user, err := u.userRepo.FindByEmail(user.Email)
-	if err != nil {
-		return errs.ErrInternalServer
-	}
-	if user != nil {
-		return ErrUserAlreadyExists
-	}
-	return u.userRepo.Create(user)
 }
 
 // GetAllUsers implements UserService.
@@ -75,22 +64,26 @@ func (u *UserServiceImpl) GetAllUsers() ([]*entity.User, error) {
 func (u *UserServiceImpl) GetUser(id uuid.UUID) (*entity.User, error) {
 	user, err := u.userRepo.FindByID(id)
 	if err != nil {
-		return nil, errs.ErrInternalServer
-	}
-	if user == nil {
-		return nil, errs.ErrNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, ErrUserNotFound
+		default:
+			return nil, errs.ErrInternalServer
+		}
 	}
 	return user, nil
 }
 
 // UpdateUser implements UserService.
 func (u *UserServiceImpl) UpdateUser(id uuid.UUID, data *map[string]interface{}) error {
-	existing, err := u.userRepo.FindByID(id)
+	_, err := u.userRepo.FindByID(id)
 	if err != nil {
-		return errs.ErrInternalServer
-	}
-	if existing == nil {
-		return errs.ErrNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrUserNotFound
+		default:
+			return errs.ErrInternalServer
+		}
 	}
 	if val, ok := (*data)["password"]; ok {
 		// log.Println(val)

@@ -10,6 +10,7 @@ import (
 	errs "github.com/YukLomba/BE-YukLomba/internal/domain/error"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -45,10 +46,12 @@ func NewCompetitionService(competitionRepo repository.CompetitionRepository) Com
 func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*entity.Competition, error) {
 	competition, err := s.competitionRepo.FindByID(id)
 	if err != nil {
-		return nil, errs.ErrInternalServer
-	}
-	if competition == nil {
-		return nil, ErrCompetitionNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, ErrCompetitionNotFound
+		default:
+			return nil, errs.ErrInternalServer
+		}
 	}
 	return competition, nil
 }
@@ -139,20 +142,26 @@ func (s *CompetitionServiceImpl) GetCompetitionsByOrganizer(organizerID uuid.UUI
 func (s *CompetitionServiceImpl) RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error {
 	competition, err := s.competitionRepo.FindByID(competitionID)
 	if err != nil {
-		return errs.ErrInternalServer
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrCompetitionNotFound
+		default:
+			return errs.ErrInternalServer
+		}
 	}
-	if competition == nil {
-		return ErrCompetitionNotFound
-	}
+
 	if competition.Deadline.Before(time.Now()) {
 		return ErrCompetitionDeadlinePassed
 	}
-	Registration, err := s.competitionRepo.FindUserRegistration(competitionID, authInfo.ID)
+
+	_, err = s.competitionRepo.FindUserRegistration(competitionID, authInfo.ID)
 	if err != nil {
-		return errs.ErrInternalServer
-	}
-	if Registration == nil {
-		return ErrCompetitionAlreadyRegistered
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			// Registration not found, create a new registration
+		default:
+			return errs.ErrInternalServer
+		}
 	}
 
 	registration := &entity.Registration{

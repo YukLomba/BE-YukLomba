@@ -9,6 +9,7 @@ import (
 	errs "github.com/YukLomba/BE-YukLomba/internal/domain/error"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var (
@@ -37,10 +38,12 @@ func NewOrganizationService(orgRepo repository.OrganizationRepository) Organizat
 func (s *OrganizationServiceImpl) GetOrganization(id uuid.UUID) (*entity.Organization, error) {
 	org, err := s.orgRepo.FindByID(id)
 	if err != nil {
-		return nil, errs.ErrInternalServer
-	}
-	if org == nil {
-		return nil, ErrOrganizationNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, ErrOrganizationNotFound
+		default:
+			return nil, errs.ErrInternalServer
+		}
 	}
 	return org, nil
 }
@@ -74,10 +77,12 @@ func (s *OrganizationServiceImpl) UpdateOrganization(org *entity.Organization, a
 	}
 	org, err := s.orgRepo.FindByID(org.ID)
 	if err != nil {
-		return errs.ErrInternalServer
-	}
-	if org == nil {
-		return ErrOrganizationNotFound
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrOrganizationNotFound
+		default:
+			return errs.ErrInternalServer
+		}
 	}
 
 	if err := s.orgRepo.Update(org); err != nil {
@@ -95,14 +100,16 @@ func (s *OrganizationServiceImpl) DeleteOrganization(id uuid.UUID, authInfo *dto
 		return errs.ErrUnauthorized
 	}
 
-	org, err := s.orgRepo.FindByID(id)
+	_, err := s.orgRepo.FindByID(id)
 
 	if err != nil {
-		return errs.ErrInternalServer
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrOrganizationNotFound
+		default:
+			return errs.ErrInternalServer
+		}
 
-	}
-	if org == nil {
-		return ErrOrganizationNotFound
 	}
 
 	if err := s.orgRepo.Delete(id); err != nil {

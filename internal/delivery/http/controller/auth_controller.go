@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"log"
+	"errors"
 
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
@@ -33,17 +33,29 @@ func (c *AuthController) Register(ctx *fiber.Ctx) error {
 	}
 	// Validate request
 	if err := util.ValidateStruct(req); err != nil {
+		errors := util.GenerateValidationErrorMessage(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": errors,
 		})
 	}
 
 	// Register user
 	user, err := c.authService.Register(req)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, service.ErrUserAlreadyExists):
+			return ctx.Status(fiber.StatusConflict).JSON(fiber.Map{
+				"error": "User already exists",
+			})
+		case errors.Is(err, service.ErrInvalidRole):
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid role",
+			})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to register user",
+			})
+		}
 	}
 
 	// Return success response
@@ -67,19 +79,26 @@ func (c *AuthController) Login(ctx *fiber.Ctx) error {
 		})
 	}
 
-	// Validate request
-	if req.Email == "" || req.Password == "" {
+	if err := util.ValidateStruct(req); err != nil {
+		errors := util.GenerateValidationErrorMessage(err)
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Email and password are required",
+			"error": errors,
 		})
 	}
 
 	// Login user
 	token, err := c.authService.Login(req)
 	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, service.ErrInvalidCredentials):
+			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid credentials",
+			})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to login",
+			})
+		}
 	}
 
 	// Return token
@@ -91,7 +110,6 @@ func (c *AuthController) GoogleAuth(ctx *fiber.Ctx) error {
 	// Get Google OAuth URL
 	url, err := c.authService.GetGoogleOauthUrl()
 	if err != nil {
-		log.Println("Failed to get Google OAuth URL:", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to get Google OAuth URL",
 		})
@@ -109,8 +127,8 @@ func (c *AuthController) GoogleCallback(ctx *fiber.Ctx) error {
 	}
 	token, err := c.authService.SignInWithGoogle(req.Code, req.State)
 	if err != nil {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to sign in with Google",
 		})
 	}
 	// Return token
@@ -127,28 +145,29 @@ func (c *AuthController) CompleteRegistration(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
 
-	// Validate role here or in service layer
-	if req.Role != "student" && req.Role != "organizer" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid role"})
-	}
 	userId := ctx.Locals("user_id").(uuid.UUID)
 
 	// Complete registration
-	user, err := c.authService.CompleteRegistration(userId, req.Role)
+	_, err := c.authService.CompleteRegistration(userId, req.Role)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, service.ErrInvalidRole):
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": "Invalid role",
+			})
+		case errors.Is(err, service.ErrUserNotFound):
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"error": "User not found",
+			})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to complete registration",
+			})
+		}
 	}
 	// Return success response
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User registration completed successfully",
-		"user": fiber.Map{
-			"id":       user.ID,
-			"username": user.Username,
-			"email":    user.Email,
-			"role":     user.Role,
-		},
 	})
 }
 

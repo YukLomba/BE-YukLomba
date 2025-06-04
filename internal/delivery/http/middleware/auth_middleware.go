@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"log"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 )
 
 // AuthMiddleware is a middleware for JWT authentication
-func AuthMiddleware(service service.UserService) fiber.Handler {
+func AuthMiddleware(userSvc service.UserService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Get authorization header
 		log.Println("AuthMiddleware is called")
@@ -42,18 +43,18 @@ func AuthMiddleware(service service.UserService) fiber.Handler {
 				"error": "Invalid or expired token",
 			})
 		}
-		user, err := service.GetUser(claims.UserID)
-
+		user, err := userSvc.GetUser(claims.UserID)
 		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "User not found",
-			})
-		}
-
-		if user == nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "User not found",
-			})
+			switch {
+			case errors.Is(err, service.ErrUserNotFound):
+				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+					"error": "User not found",
+				})
+			default:
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"error": "Internal server error",
+				})
+			}
 		}
 
 		if user.PasswordChangedAt.After(claims.IssuedAt.Time) {
