@@ -166,19 +166,21 @@ func (s *CompetitionServiceImpl) RegisterUserToCompetition(authInfo *dto.AuthInf
 	}
 
 	_, err = s.competitionRepo.FindUserRegistration(competitionID, authInfo.ID)
+
 	if err != nil {
-		switch {
-		case errors.Is(err, gorm.ErrRecordNotFound):
-			// Registration not found, create a new registration
-		default:
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return errs.ErrInternalServer
 		}
+	} else {
+		// User registration found, already registered
+		return ErrCompetitionAlreadyRegistered
 	}
 
 	registration := &entity.Registration{
 		UserID:        authInfo.ID,
 		CompetitionID: competitionID,
 	}
+
 	err = s.competitionRepo.CreateUserRegistration(registration)
 
 	if err != nil {
