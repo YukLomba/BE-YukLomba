@@ -164,7 +164,7 @@ func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {
 	authInfo := util.GetAuthInfo(ctx)
 
 	if err := c.competitionService.RegisterUserToCompetition(authInfo, competitionID); err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to register for competition"})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to register for competition", "message": err.Error()})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Successfully registered for competition"})
