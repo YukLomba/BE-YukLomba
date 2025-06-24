@@ -1,0 +1,43 @@
+@startuml
+entity User {
+  *id: UUID
+  username: String
+  email: String
+  password: String
+  role: String
+  university: String
+  interests: String
+  organization_id: UUID
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+entity Organization {
+  *id: UUID
+  name: String
+  logo: String
+  description: String
+  created_at: DateTime
+  updated_at: DateTime
+}
+
+entity Competition {
+  *id: UUID
+  title: String
+  type: String
+  description: Text
+  deadline: DateTime
+  category: String
+}
+
+entity Registration {
+  *user_id: UUID
+  *competition_id: UUID
+  created_at: DateTime
+}
+
+User }o--|| Registration
+Competition }o--|| Registration 
+User |o--o{ Organization : "belongs to"
+Organization ||--o{ Competition : organizes
+@enduml

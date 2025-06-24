@@ -1,0 +1,104 @@
+@startuml
+skinparam classFontSize 15
+skinparam classAttributeIconSize 0
+
+' ********** ENTITIES **********
+class User {
+  -id: UUID
+  -username: String
+  -email: String
+  -password: String
+  -role: String
+  -university: String
+  -interests: String
+  -organization_id: UUID
+  -created_at: DateTime
+  -updated_at: DateTime
+}
+
+class Competition {
+  -id: UUID
+  -title: String
+  -type: String
+  -description: Text
+  -deadline: DateTime
+  -category: String
+  -eventLink: String
+  -results: String
+}
+
+class Organization {
+  -id: UUID
+  -name: String
+  -logo: String
+  -description: Text
+  -created_at: DateTime
+  -updated_at: DateTime
+}
+
+class Registration {
+  -user_id: UUID
+  -competition_id: UUID
+  -created_at: DateTime
+}
+
+' ********** SERVICES **********
+class AuthService {
+  +Register(dto.RegisterRequest): (*entity.User, error)
+  +Login(dto.LoginRequest): (*dto.TokenResponse, error)
+  +GetGoogleOauthUrl(): (string, error)
+  +SignInWithGoogle(string): (*dto.TokenResponse, error)
+  +ValidateToken(string): (*util.JWTClaims, error)
+  +CompleteRegistration(uuid.UUID, string): (*entity.User, error)
+}
+
+class CompetitionService {
+  +CreateCompetition(*dto.AuthInfo, *entity.Competition): error
+  +GetCompetition(uuid.UUID): (*entity.Competition, error)
+  +UpdateCompetition(*dto.AuthInfo, uuid.UUID, *map[string]interface{}): error
+  +DeleteCompetition(*dto.AuthInfo, uuid.UUID): error
+  +RegisterUserToCompetition(*dto.AuthInfo, uuid.UUID): error
+}
+
+class OrganizationService {
+  +CreateOrganization(*entity.Organization, *dto.AuthInfo): error
+  +UpdateOrganization(*entity.Organization, *dto.AuthInfo): error
+  +DeleteOrganization(uuid.UUID, *dto.AuthInfo): error
+}
+
+class UserService {
+  +UpdateUser(uuid.UUID, *map[string]interface{}): error
+  +GetAllUserRegistration(uuid.UUID): ([]*entity.Registration, error)
+}
+
+' ********** REPOSITORIES **********
+interface UserRepository {
+  +FindByEmail(string): (*entity.User, error)
+  +FindByUsername(string): (*entity.User, error)
+  +Create(*entity.User): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+}
+
+interface CompetitionRepository {
+  +FindByID(uuid.UUID): (*entity.Competition, error)
+  +Create(*entity.Competition): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+}
+
+interface OrganizationRepository {
+  +FindByID(uuid.UUID): (*entity.Organization, error)
+  +Create(*entity.Organization): error
+  +Update(*entity.Organization): error
+  +Delete(uuid.UUID): error
+}
+
+' ********** RELATIONSHIPS **********
+User "1" *-- "many" Registration
+Competition "1" *-- "many" Registration
+Organization "1" o-- "many" Competition
+
+AuthService ..> UserRepository : depends on
+CompetitionService ..> CompetitionRepository : depends on
+OrganizationService ..> OrganizationRepository : depends on
+UserService ..> UserRepository : depends on
+@enduml

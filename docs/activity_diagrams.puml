@@ -1,0 +1,75 @@
+@startuml
+!define USER_COLOR #FFAAAA
+!define ORGANIZER_COLOR #AAFFAA
+!define ADMIN_COLOR #AAAAFF
+
+'=============== USER ACTIVITIES ===============
+partition "User Activities" {
+  start
+  :Access registration page;
+  if (Email valid?) then (Yes)
+    :Check email existence;
+    if (Email not exists?) then (Yes)
+      :Hash password;
+      :Create user entity;
+      :Save to database;
+      :Return user data;
+    else (No)
+      :Return "User already exists" error;
+    endif
+  else (No)
+    :Return validation error;
+  endif
+  stop
+  
+  start
+  :<<USER_COLOR>> Authenticate with Google;
+  :Exchange code for token;
+  :Get user info from Google;
+  if (User exists?) then (No)
+    :Create new user record;
+  endif
+  :Generate JWT token;
+  stop
+}
+
+'============= ORGANIZER ACTIVITIES =============
+partition "Organizer Activities" {
+  start
+  :<<ORGANIZER_COLOR>> Submit competition details;
+  :Validate organizer credentials;
+  if (Deadline valid?) then (Yes)
+    :Create competition entity;
+    :Save to database;
+    :Return success;
+  else (No)
+    :Return "Invalid deadline" error;
+  endif
+  stop
+  
+  start
+  :<<ORGANIZER_COLOR>> Update competition;
+  :Verify ownership;
+  if (Authorized?) then (Yes)
+    :Update competition data;
+    :Save changes;
+  else (No)
+    :Return unauthorized;
+  endif
+  stop
+}
+
+'============== ADMIN ACTIVITIES ================
+partition "Admin Activities" {
+  start
+  :<<ADMIN_COLOR>> Manage organizations;
+  :Verify admin role;
+  if (Authorized?) then (Yes)
+    :Create/Update organization;
+    :Update database;
+  else (No)
+    :Return forbidden;
+  endif
+  stop
+}
+@enduml
