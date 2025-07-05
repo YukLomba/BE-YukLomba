@@ -15,23 +15,26 @@ import (
 var (
 	ErrOrganizationNotFound = errors.New("organization not found")
 	ErrOrganizationExists   = errors.New("organization already exists")
+	ErrMaximumOrganizations = errors.New("maximum organizations reached")
 )
 
 type OrganizationService interface {
 	GetOrganization(id uuid.UUID) (*entity.Organization, error)
 	GetAllOrganizations() ([]*entity.Organization, error)
 	CreateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
-	UpdateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
+	UpdateOrganization(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error
 	DeleteOrganization(id uuid.UUID, authInfo *dto.AuthInfo) error
 }
 
 type OrganizationServiceImpl struct {
-	orgRepo repository.OrganizationRepository
+	orgRepo  repository.OrganizationRepository
+	userRepo repository.UserRepository
 }
 
-func NewOrganizationService(orgRepo repository.OrganizationRepository) OrganizationService {
+func NewOrganizationService(orgRepo repository.OrganizationRepository, userRepo repository.UserRepository) OrganizationService {
 	return &OrganizationServiceImpl{
-		orgRepo: orgRepo,
+		orgRepo:  orgRepo,
+		userRepo: userRepo,
 	}
 }
 
@@ -58,24 +61,29 @@ func (s *OrganizationServiceImpl) GetAllOrganizations() ([]*entity.Organization,
 
 func (s *OrganizationServiceImpl) CreateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error {
 	authorizedRoles := []string{"admin", "organizer"}
-	if slices.Contains(authorizedRoles, authInfo.Role) {
+	if !slices.Contains(authorizedRoles, authInfo.Role) {
 		return errs.ErrUnauthorized
+	}
+
+	if (*authInfo).OrganizationID != nil && (*authInfo).Role == "organizer" {
+		return ErrMaximumOrganizations
 	}
 	if err := s.orgRepo.Create(org); err != nil {
 		return errs.ErrInternalServer
 	}
+	if (*authInfo).Role == "organizer" && (*authInfo).OrganizationID == nil {
+		data := map[string]interface{}{
+			"organization_id": org.ID,
+		}
+		if err := s.userRepo.Update((*authInfo).ID, &data); err != nil {
+			return errs.ErrInternalServer
+		}
+	}
 	return nil
 }
 
-func (s *OrganizationServiceImpl) UpdateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error {
-	authorizedRoles := []string{"admin", "organizer"}
-	if slices.Contains(authorizedRoles, authInfo.Role) {
-		return errs.ErrUnauthorized
-	}
-	if *authInfo.OrganizationID != org.ID || authInfo.Role != "admin" {
-		return errs.ErrUnauthorized
-	}
-	org, err := s.orgRepo.FindByID(org.ID)
+func (s *OrganizationServiceImpl) UpdateOrganization(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error {
+	org, err := s.orgRepo.FindByID(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, gorm.ErrRecordNotFound):
@@ -84,19 +92,18 @@ func (s *OrganizationServiceImpl) UpdateOrganization(org *entity.Organization, a
 			return errs.ErrInternalServer
 		}
 	}
+	if *(*authInfo).OrganizationID != org.ID && (*authInfo).Role == "organizer" {
+		return errs.ErrUnauthorized
+	}
 
-	if err := s.orgRepo.Update(org); err != nil {
+	if err := s.orgRepo.Update(id, data); err != nil {
 		return errs.ErrInternalServer
 	}
 	return nil
 }
 
 func (s *OrganizationServiceImpl) DeleteOrganization(id uuid.UUID, authInfo *dto.AuthInfo) error {
-	authorizedRoles := []string{"admin", "organizer"}
-	if slices.Contains(authorizedRoles, authInfo.Role) {
-		return errs.ErrUnauthorized
-	}
-	if *authInfo.OrganizationID != id || authInfo.Role != "admin" {
+	if *(*authInfo).OrganizationID != id && authInfo.Role == "organizer" {
 		return errs.ErrUnauthorized
 	}
 
@@ -112,8 +119,18 @@ func (s *OrganizationServiceImpl) DeleteOrganization(id uuid.UUID, authInfo *dto
 
 	}
 
-	if err := s.orgRepo.Delete(id); err != nil {
+	err = s.orgRepo.Delete(id)
+	if err != nil {
 		return errs.ErrInternalServer
+	}
+	// delete user organization_id if organizer
+	if (*authInfo).Role == "organizer" && (*authInfo).OrganizationID == nil {
+		data := map[string]interface{}{
+			"organization_id": nil,
+		}
+		if err := s.userRepo.Update((*authInfo).ID, &data); err != nil {
+			return errs.ErrInternalServer
+		}
 	}
 	return nil
 }

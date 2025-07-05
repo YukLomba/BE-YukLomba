@@ -1,12 +1,17 @@
 package util
 
-import "github.com/go-playground/validator/v10"
+import (
+	"time"
+
+	"github.com/YukLomba/BE-YukLomba/internal/domain/common"
+	"github.com/go-playground/validator/v10"
+)
 
 var validate *validator.Validate
 
 func ValidateStruct(s any) error {
 	validate = validator.New(validator.WithRequiredStructEnabled())
-
+	RegisterDatetimeValidators(validate)
 	return validate.Struct(s)
 }
 
@@ -33,4 +38,22 @@ func GenerateValidationErrorMessage(err error) []string {
 	}
 
 	return errors
+}
+
+func RegisterDatetimeValidators(v *validator.Validate) {
+	v.RegisterValidation("future", func(fl validator.FieldLevel) bool {
+		dt, ok := fl.Field().Interface().(common.Datetime)
+		if !ok {
+			return false
+		}
+		return dt.ToTime().After(time.Now())
+	})
+
+	v.RegisterValidation("past", func(fl validator.FieldLevel) bool {
+		dt, ok := fl.Field().Interface().(common.Datetime)
+		if !ok {
+			return false
+		}
+		return dt.ToTime().Before(time.Now())
+	})
 }

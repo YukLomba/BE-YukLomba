@@ -51,7 +51,7 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	competitionService := service.NewCompetitionService(competitionRepo)
 	authService := service.NewAuthService(userRepo, cfg.Auth)
-	organizationService := service.NewOrganizationService(organizationRepo)
+	organizationService := service.NewOrganizationService(organizationRepo, userRepo)
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)

@@ -10,7 +10,7 @@ type UserRepository interface {
 	FindAll() ([]*entity.User, error)
 	Create(user *entity.User) error
 	Update(userID uuid.UUID, data *map[string]interface{}) error
-	FindAllRegistration(id uuid.UUID) ([]*entity.Registration, error)
+	FindAllRegistration(id uuid.UUID) ([]*entity.Competition, error)
 	FindByEmail(email string) (*entity.User, error)
 	FindByUsername(username string) (*entity.User, error)
 }

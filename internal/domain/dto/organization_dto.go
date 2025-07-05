@@ -15,9 +15,9 @@ type OrganizationCreateRequest struct {
 
 // OrganizationUpdateRequest represents the data needed to update an organization
 type OrganizationUpdateRequest struct {
-	Name        string `json:"name" validate:"required"`
-	Logo        string `json:"logo" validate:"required"`
-	Description string `json:"description" validate:"required"`
+	Name        *string `json:"name" validate:"required"`
+	Logo        *string `json:"logo" validate:"required"`
+	Description *string `json:"description" validate:"required"`
 }
 
 // OrganizationResponse represents the organization data returned to the client

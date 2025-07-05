@@ -1,19 +1,24 @@
 package mapper
 
 import (
+	"time"
+
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 )
 
 func ToCompetitionFromCreate(dto *dto.CompetitionCreateRequest) *entity.Competition {
-	return &entity.Competition{
+	competition := entity.Competition{
 		Title:       dto.Title,
 		Type:        dto.Type,
 		Description: dto.Description,
-		Deadline:    dto.Deadline,
+		Deadline:    time.Time(dto.Deadline),
 		Category:    dto.Category,
-		OrganizerID: *dto.OrganizerID,
 	}
+	if dto.OrganizerID != nil {
+		competition.OrganizerID = *dto.OrganizerID
+	}
+	return &competition
 }
 
 func ToCompetitionsFromCreate(dto []*dto.CompetitionCreateRequest) []*entity.Competition {

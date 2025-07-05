@@ -83,8 +83,9 @@ func (h *UserController) GetAllUserPastCompetition(c *fiber.Ctx) error {
 			})
 		}
 	}
+	data := mapper.ToCompetitionsResponse(pastCompetition)
 
-	return c.JSON(pastCompetition)
+	return c.JSON(data)
 }
 
 func (h *UserController) UpdateUser(c *fiber.Ctx) error {

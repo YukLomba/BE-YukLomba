@@ -17,7 +17,7 @@ func SetupOrganizationRoute(router fiber.Router, organizationController *control
 	organizations.Get("/:id", organizationController.GetOrganization)
 
 	// protected routes
-	protected := organizations.Use(*authMiddleware, middleware.RoleMiddleware("admin"))
+	protected := organizations.Use(*authMiddleware, middleware.RoleMiddleware("admin", "organizer"))
 
 	// Create new organization
 	protected.Post("/", organizationController.CreateOrganization)

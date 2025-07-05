@@ -56,11 +56,11 @@ func (r *organizationRepository) Create(org *entity.Organization) error {
 	return nil
 }
 
-func (r *organizationRepository) Update(org *entity.Organization) error {
-	result := r.db.Save(org)
+func (r *organizationRepository) Update(id uuid.UUID, data *map[string]interface{}) error {
+	result := r.db.Model(&entity.Organization{}).Where("id = ?", id).Updates(data)
 	if result.Error != nil {
 		slog.Error("Error updating organization:",
-			"organization", org,
+			"organization", data,
 			"error", result.Error,
 		)
 		return result.Error

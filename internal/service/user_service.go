@@ -20,7 +20,7 @@ type UserService interface {
 	GetUser(id uuid.UUID) (*entity.User, error)
 	GetAllUsers() ([]*entity.User, error)
 	UpdateUser(id uuid.UUID, data *map[string]interface{}) error
-	GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error)
+	GetAllUserRegistration(id uuid.UUID) ([]*entity.Competition, error)
 }
 
 type UserServiceImpl struct {
@@ -34,7 +34,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 }
 
 // GetAllUserRegistration implements UserService.
-func (u *UserServiceImpl) GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error) {
+func (u *UserServiceImpl) GetAllUserRegistration(id uuid.UUID) ([]*entity.Competition, error) {
 	_, err := u.userRepo.FindByID(id)
 	if err != nil {
 		switch {

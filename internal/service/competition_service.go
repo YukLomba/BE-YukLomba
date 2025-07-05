@@ -70,10 +70,13 @@ func (s *CompetitionServiceImpl) CreateCompetition(authInfo *dto.AuthInfo, compe
 	if competition.Deadline.Before(time.Now()) {
 		return ErrCompetitionDeadlinePassed
 	}
-	if authInfo.OrganizationID == nil {
+	if (*authInfo).OrganizationID == nil && (*authInfo).Role == "organizer" {
 		return errs.ErrUnauthorized
 	}
-	competition.OrganizerID = *authInfo.OrganizationID
+	// if role organizer, replace organizerID with authInfo.OrganizationID
+	if (*authInfo).Role == "organizer" {
+		competition.OrganizerID = *(*authInfo).OrganizationID
+	}
 	return s.competitionRepo.Create(competition)
 }
 
@@ -130,7 +133,7 @@ func (s *CompetitionServiceImpl) DeleteCompetition(authInfo *dto.AuthInfo, id uu
 	if err != nil {
 		return ErrCompetitionNotFound
 	}
-	if *authInfo.OrganizationID != competition.OrganizerID {
+	if *(*authInfo).OrganizationID != competition.OrganizerID && (*authInfo).Role == "organizer" {
 		return ErrCompetitionNotBelongsToOrg
 	}
 	err = s.competitionRepo.Delete(id)

@@ -72,7 +72,7 @@ func AuthMiddleware(userSvc service.UserService) fiber.Handler {
 		// Set user information in the context
 		c.Locals("user_id", claims.UserID)
 		c.Locals("role", claims.Role)
-		c.Locals("organization_id", claims.OrganizationID)
+		c.Locals("organization_id", user.OrganizationID)
 
 		// Continue to the next middleware or handler
 		return c.Next()
@@ -92,13 +92,13 @@ func RoleMiddleware(roles ...string) fiber.Handler {
 
 		// Check if the user has the required role
 		userRole := role.(string)
-		if slices.Contains(roles, userRole) {
-			return c.Next()
+		if !slices.Contains(roles, userRole) {
+			// If the user doesn't have the required role, return forbidden
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Forbidden",
+			})
 		}
+		return c.Next()
 
-		// If the user doesn't have the required role, return forbidden
-		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"error": "Forbidden",
-		})
 	}
 }

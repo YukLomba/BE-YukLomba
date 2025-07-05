@@ -3,7 +3,6 @@ package mapper
 import (
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
-	"github.com/google/uuid"
 )
 
 func ToOrganizationShort(org *entity.Organization) *dto.OrganizationShort {
@@ -49,11 +48,16 @@ func ToOrganizationFromCreate(req *dto.OrganizationCreateRequest) *entity.Organi
 	}
 }
 
-func ToOrganizationFromUpdate(req *dto.OrganizationUpdateRequest, id uuid.UUID) *entity.Organization {
-	return &entity.Organization{
-		ID:          id,
-		Name:        req.Name,
-		Logo:        req.Logo,
-		Description: req.Description,
+func ToOrganizationFromUpdate(req *dto.OrganizationUpdateRequest) *map[string]interface{} {
+	data := make(map[string]interface{})
+	if req.Description != nil {
+		data["description"] = *req.Description
 	}
+	if req.Logo != nil {
+		data["logo"] = *req.Logo
+	}
+	if req.Name != nil {
+		data["name"] = *req.Name
+	}
+	return &data
 }

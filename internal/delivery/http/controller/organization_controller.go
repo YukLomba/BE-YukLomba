@@ -69,6 +69,8 @@ func (c *OrganizationController) CreateOrganization(ctx *fiber.Ctx) error {
 		switch {
 		case errors.Is(err, errs.ErrUnauthorized):
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+		case errors.Is(err, service.ErrMaximumOrganizations):
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Maximum organizations reached"})
 		case errors.Is(err, errs.ErrInternalServer):
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create organization"})
 		default:
@@ -92,9 +94,9 @@ func (c *OrganizationController) UpdateOrganization(ctx *fiber.Ctx) error {
 	}
 
 	authInfo := util.GetAuthInfo(ctx)
-	Organization := mapper.ToOrganizationFromUpdate(req, id)
+	data := mapper.ToOrganizationFromUpdate(req)
 
-	if err := c.organizationService.UpdateOrganization(Organization, authInfo); err != nil {
+	if err := c.organizationService.UpdateOrganization(authInfo, id, data); err != nil {
 		switch {
 		case errors.Is(err, errs.ErrUnauthorized):
 			return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})

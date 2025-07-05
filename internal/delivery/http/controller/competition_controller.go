@@ -64,8 +64,6 @@ func (c *CompetitionController) CreateCompetition(ctx *fiber.Ctx) error {
 	}
 	authInfo := util.GetAuthInfo(ctx)
 
-	*req.OrganizerID = *authInfo.OrganizationID
-
 	competition := mapper.ToCompetitionFromCreate(req)
 
 	if err := c.competitionService.CreateCompetition(authInfo, competition); err != nil {

@@ -48,10 +48,10 @@ func (r userRepository) FindByUsername(username string) (*entity.User, error) {
 }
 
 // FindAllRegistration implements repository.UserRepository.
-func (r userRepository) FindAllRegistration(id uuid.UUID) ([]*entity.Registration, error) {
-	var registrations []*entity.Registration
+func (r userRepository) FindAllRegistration(id uuid.UUID) ([]*entity.Competition, error) {
+	var user entity.User
 
-	result := r.db.Find(&registrations, "user_id = ?", id)
+	result := r.db.Preload("Organization").Preload("JoinedCompetitions.Organizer").Find(&user, id)
 
 	if result.Error != nil {
 		slog.Error("Error finding registrations by user ID:",
@@ -61,7 +61,7 @@ func (r userRepository) FindAllRegistration(id uuid.UUID) ([]*entity.Registratio
 		return nil, result.Error
 	}
 
-	return registrations, nil
+	return user.JoinedCompetitions, nil
 }
 
 // Create implements repository.UserRepository.

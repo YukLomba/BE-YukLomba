@@ -20,6 +20,7 @@ type Competition struct {
 	Category    string       `json:"category" gorm:"not null"`
 	EventLink   string       `json:"eventLink" gorm:"column:event_link" validate:"omitempty,url"`
 	Results     string       `json:"results" gorm:"type:text"`
+	Registrant  []*User      `gorm:"many2many:registrations"`
 	CreatedAt   time.Time    `json:"createdAt" gorm:"autoCreateTime"`
 	UpdatedAt   time.Time    `json:"updatedAt" gorm:"autoUpdateTime"`
 }

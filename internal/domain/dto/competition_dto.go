@@ -3,19 +3,20 @@ package dto
 import (
 	"time"
 
+	"github.com/YukLomba/BE-YukLomba/internal/domain/common"
 	"github.com/google/uuid"
 )
 
 // CompetitionCreateRequest represents the data needed to create a competition
 type CompetitionCreateRequest struct {
-	Title       string     `json:"title" validate:"required"`
-	Type        string     `json:"type" validate:"required"`
-	Description string     `json:"description" validate:"required"`
-	Image       *[]string  `json:"image" validate:"dive,url"`
-	OrganizerID *uuid.UUID `json:"organizer_id" validate:"required"`
-	Deadline    time.Time  `json:"deadline" validate:"required,future"`
-	Category    string     `json:"category" validate:"required"`
-	EventLink   string     `json:"eventLink" validate:"required,url"`
+	Title       string          `json:"title" validate:"required"`
+	Type        string          `json:"type" validate:"required"`
+	Description string          `json:"description" validate:"required"`
+	Image       *[]string       `json:"image" validate:"omitempty,dive,url"`
+	OrganizerID *(uuid.UUID)    `json:"organizer_id" `
+	Deadline    common.Datetime `json:"deadline" validate:"required,future"`
+	Category    string          `json:"category" validate:"required"`
+	EventLink   string          `json:"event_link" validate:"required,url"`
 }
 
 type MultiCompetitionCreateRequest struct {
