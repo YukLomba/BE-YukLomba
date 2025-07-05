@@ -24,28 +24,14 @@ jobs:
         run: |
           go build -o yuklomba -ldflags="-s -w" ./cmd/api
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: yuklomba-${{ inputs.release_version }}-linux
-          path: yuklomba
-
-      - name: Create Release
-        uses: actions/create-release@v2
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ inputs.release_version }}
-          release_name: Release ${{ inputs.release_version }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./yuklomba
-          asset_name: yuklomba-${{ inputs.release_version }}-linux
-          asset_content_type: application/octet-stream
+          name: Release ${{ inputs.release_version }}
+          files: |
+            yuklomba
+          body: |
+            YukLomba Backend ${{ inputs.release_version }} Linux binary
