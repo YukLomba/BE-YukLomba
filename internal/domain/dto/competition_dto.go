@@ -75,3 +75,15 @@ type CompetitionShort struct {
 	CreatedAt   time.Time         `json:"createdAt"`
 	UpdatedAt   time.Time         `json:"updatedAt"`
 }
+
+type CompetititionReview struct {
+	Comment string `json:"comment" validate:"required"`
+	Rating  int    `json:"rating" validate:"required,min=1,max=5"`
+}
+
+type CompetitionReviewResponse struct {
+	Comment   string    `json:"comment"`
+	Rating    int       `json:"rating"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}

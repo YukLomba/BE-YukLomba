@@ -103,6 +103,7 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 			"error": "Invalid request body",
 		})
 	}
+	authInfo := util.GetAuthInfo(c)
 
 	if err := util.ValidateStruct(userData); err != nil {
 		errors := util.GenerateValidationErrorMessage(err)
@@ -112,7 +113,7 @@ func (h *UserController) UpdateUser(c *fiber.Ctx) error {
 	}
 	data := mapper.MapUserUpdate(userData)
 
-	if err := h.userService.UpdateUser(id, data); err != nil {
+	if err := h.userService.UpdateUser(authInfo, id, data); err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{

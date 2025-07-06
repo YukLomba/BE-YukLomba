@@ -19,6 +19,10 @@ func SetupCompetitionRoute(router fiber.Router, competitionController *controlle
 	// Get competitions by organizer ID
 	competitions.Get("/organizer/:id", competitionController.GetCompetitionsByOrganizer)
 
+	competitions.Get("/:id/reviews", competitionController.GetCompetitionReviews)
+
+	competitions.Post("/:id/reviews", *authMiddleware, middleware.RoleMiddleware("student"), competitionController.SubmitReview)
+
 	// Register user to competition
 	competitions.Post("/:id/register", *authMiddleware, competitionController.RegisterToCompetition)
 

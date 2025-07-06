@@ -19,6 +19,7 @@ var (
 	ErrCompetitionNotBelongsToOrg   = errors.New("competition does not belong to organization")
 	ErrCompetitionAlreadyRegistered = errors.New("user already registered to competition")
 	ErrCompetitionDeadlinePassed    = errors.New("competition deadline has passed")
+	ErrCompetitionNotRegistered     = errors.New("user not registered for competition")
 )
 
 type CompetitionService interface {
@@ -30,15 +31,19 @@ type CompetitionService interface {
 	DeleteCompetition(authInfo *dto.AuthInfo, id uuid.UUID) error
 	RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
 	GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error)
+	SubmitReview(authInfo *dto.AuthInfo, CompetitionId uuid.UUID, review *entity.Review) error
+	GetCompetitionReviews(competitionID uuid.UUID) ([]*entity.Review, error)
 }
 
 type CompetitionServiceImpl struct {
 	competitionRepo repository.CompetitionRepository
+	reviewRepo      repository.ReviewRepository
 }
 
-func NewCompetitionService(competitionRepo repository.CompetitionRepository) CompetitionService {
+func NewCompetitionService(competitionRepo repository.CompetitionRepository, reviewRepo repository.ReviewRepository) CompetitionService {
 	return &CompetitionServiceImpl{
 		competitionRepo: competitionRepo,
+		reviewRepo:      reviewRepo,
 	}
 }
 
@@ -150,6 +155,47 @@ func (s *CompetitionServiceImpl) GetCompetitionsByOrganizer(organizerID uuid.UUI
 		return nil, errs.ErrInternalServer
 	}
 	return competitions, nil
+}
+
+// SubmitReview implements CompetitionService.
+func (s *CompetitionServiceImpl) SubmitReview(authInfo *dto.AuthInfo, CompetitionId uuid.UUID, review *entity.Review) error {
+	// Verify user is registered for the competition
+	_, err := s.competitionRepo.FindUserRegistration(CompetitionId, authInfo.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrCompetitionNotRegistered
+		}
+		return errs.ErrInternalServer
+	}
+
+	// Check if review already exists
+	existingReview, err := s.reviewRepo.GetByUserAndCompetition(authInfo.ID, CompetitionId)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return errs.ErrInternalServer
+	}
+
+	if existingReview != nil {
+		// Update existing review
+		data := map[string]interface{}{
+			"rating":  review.Rating,
+			"comment": review.Comment,
+		}
+		return s.reviewRepo.Update(existingReview.ID, data)
+	}
+
+	// Create new review
+	review.UserID = authInfo.ID
+	review.CompetitionID = CompetitionId
+	err = s.reviewRepo.Create(review)
+	if err != nil {
+		return errs.ErrInternalServer
+	}
+	return nil
+}
+
+// GetCompetitionReviews implements CompetitionService.
+func (s *CompetitionServiceImpl) GetCompetitionReviews(competitionID uuid.UUID) ([]*entity.Review, error) {
+	return s.reviewRepo.GetByCompetition(competitionID)
 }
 
 // RegisterUserToCompetition implements CompetitionService.

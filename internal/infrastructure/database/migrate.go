@@ -11,7 +11,17 @@ func Migrate(db *gorm.DB) {
 	if db == nil {
 		log.Fatal("❌ Cannot migrate: DB connection is nil")
 	}
-	err := db.AutoMigrate(&entity.User{}, &entity.Competition{}, &entity.Registration{}, &entity.Organization{})
+	err := db.AutoMigrate(
+		&entity.User{},
+		&entity.Competition{},
+		&entity.Registration{},
+		&entity.Organization{},
+		&entity.Review{},
+	)
+
+	// db.SetupJoinTable(&entity.User{}, "JoinedCompetitions", &entity.Registration{})
+	// db.SetupJoinTable(&entity.Competition{}, "Registrant", &entity.Registration{})
+
 	if err != nil {
 		log.Fatalf("❌ Failed to migrate: %v", err)
 	}

@@ -127,3 +127,17 @@ func (r userRepository) Update(userID uuid.UUID, data *map[string]interface{}) e
 
 	return nil
 }
+
+// CountByRole implements repository.UserRepository.
+func (r userRepository) CountByRole(role string) (int, error) {
+	var count int64
+	err := r.db.Model(&entity.User{}).Where("role = ?", role).Count(&count).Error
+	if err != nil {
+		slog.Error("Error counting users by role:",
+			"role", role,
+			"error", err,
+		)
+		return 0, err
+	}
+	return int(count), nil
+}

@@ -20,7 +20,7 @@ type User struct {
 	UpdatedAt          time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	OrganizationID     *uuid.UUID     `json:"organization_id"`
 	Organization       *Organization  `json:"organization" gorm:"foreignKey:OrganizationID; constraint:OnDelete:SET NULL"`
-	JoinedCompetitions []*Competition `json:"joined_competitions" gorm:"many2many:registrations"`
+	JoinedCompetitions []*Competition `json:"joined_competitions" gorm:"many2many:registrations;"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) error {

@@ -113,3 +113,32 @@ func toCompetitionShorts(comps []*entity.Competition) []*dto.CompetitionShort {
 	}
 	return compsShort
 }
+
+func ToCompetitionReview(dto *dto.CompetititionReview) *entity.Review {
+	review := &entity.Review{
+		Rating:  dto.Rating,
+		Comment: dto.Comment,
+	}
+	return review
+
+}
+
+func ToCompetitionReviewResponse(review *entity.Review) *dto.CompetitionReviewResponse {
+	if review == nil {
+		return nil
+	}
+	return &dto.CompetitionReviewResponse{
+		Rating:    review.Rating,
+		Comment:   review.Comment,
+		CreatedAt: review.CreatedAt,
+		UpdatedAt: review.UpdatedAt,
+	}
+}
+
+func ToCompetitionReviewsResponse(reviews []*entity.Review) []*dto.CompetitionReviewResponse {
+	var revs []*dto.CompetitionReviewResponse
+	for _, rev := range reviews {
+		revs = append(revs, ToCompetitionReviewResponse(rev))
+	}
+	return revs
+}

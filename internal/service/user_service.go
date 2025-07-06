@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/entity"
 	errs "github.com/YukLomba/BE-YukLomba/internal/domain/error"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/repository"
@@ -19,7 +20,7 @@ var (
 type UserService interface {
 	GetUser(id uuid.UUID) (*entity.User, error)
 	GetAllUsers() ([]*entity.User, error)
-	UpdateUser(id uuid.UUID, data *map[string]interface{}) error
+	UpdateUser(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error
 	GetAllUserRegistration(id uuid.UUID) ([]*entity.Competition, error)
 }
 
@@ -75,7 +76,7 @@ func (u *UserServiceImpl) GetUser(id uuid.UUID) (*entity.User, error) {
 }
 
 // UpdateUser implements UserService.
-func (u *UserServiceImpl) UpdateUser(id uuid.UUID, data *map[string]interface{}) error {
+func (u *UserServiceImpl) UpdateUser(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error {
 	_, err := u.userRepo.FindByID(id)
 	if err != nil {
 		switch {
@@ -84,6 +85,9 @@ func (u *UserServiceImpl) UpdateUser(id uuid.UUID, data *map[string]interface{})
 		default:
 			return errs.ErrInternalServer
 		}
+	}
+	if (*authInfo).ID != id {
+		return errs.ErrUnauthorized
 	}
 	if val, ok := (*data)["password"]; ok {
 		// log.Println(val)

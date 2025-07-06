@@ -196,3 +196,30 @@ func (r *competitionRepository) FindUserRegistration(competitionID uuid.UUID, us
 	}
 	return &registration, nil
 }
+
+func (r *competitionRepository) CountAllRegistrations() (int, error) {
+	var count int64
+	err := r.db.Model(&entity.Registration{}).Count(&count).Error
+	if err != nil {
+		slog.Error("Error counting all registrations:",
+			"error", err,
+		)
+		return 0, err
+	}
+	return int(count), nil
+}
+
+func (r *competitionRepository) CountRegistrations(competitionID uuid.UUID) (int, error) {
+	var count int64
+	err := r.db.Model(&entity.Registration{}).
+		Where("competition_id = ?", competitionID).
+		Count(&count).Error
+	if err != nil {
+		slog.Error("Error counting registrations for competition:",
+			"competitionID", competitionID,
+			"error", err,
+		)
+		return 0, err
+	}
+	return int(count), nil
+}

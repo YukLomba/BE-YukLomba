@@ -46,18 +46,21 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	competitionRepo := repository.NewCompetitionRepository(db)
 	organizationRepo := repository.NewOrganizationRepository(db)
+	reviewRepo := repository.NewReviewRepository(db)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
-	competitionService := service.NewCompetitionService(competitionRepo)
+	competitionService := service.NewCompetitionService(competitionRepo, reviewRepo)
 	authService := service.NewAuthService(userRepo, cfg.Auth)
 	organizationService := service.NewOrganizationService(organizationRepo, userRepo)
+	analyticsService := service.NewAnalyticsService(userRepo, competitionRepo, reviewRepo)
 
 	// Initialize controllers
 	userController := controller.NewUserController(userService)
 	competitionController := controller.NewCompetitionController(competitionService)
 	authController := controller.NewAuthController(authService)
 	organizationController := controller.NewOrganizationController(organizationService)
+	analyticsController := controller.NewAnalyticsController(analyticsService)
 
 	// Initialize AuthMiddleware
 	authMiddlware := middleware.AuthMiddleware(userService)
@@ -82,6 +85,7 @@ func main() {
 	router.SetupCompetitionRoute(api, competitionController, &authMiddlware)
 	router.SetupAuthRoute(api, authController, &authMiddlware)
 	router.SetupOrganizationRoute(api, organizationController, &authMiddlware)
+	router.SetupAnalyticsRoute(api, analyticsController, &authMiddlware)
 
 	app.Listen(fmt.Sprintf(":%s", cfg.Server.Port))
 }

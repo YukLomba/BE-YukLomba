@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"errors"
+
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
 	"github.com/YukLomba/BE-YukLomba/internal/domain/mapper"
 	"github.com/YukLomba/BE-YukLomba/internal/infrastructure/util"
@@ -166,4 +168,47 @@ func (c *CompetitionController) RegisterToCompetition(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Successfully registered for competition"})
+}
+
+func (c *CompetitionController) SubmitReview(ctx *fiber.Ctx) error {
+	competitionID, err := util.ParseCtxParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid competition ID"})
+	}
+
+	req := new(dto.CompetititionReview)
+	if err := ctx.BodyParser(&req); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid review data"})
+	}
+
+	review := mapper.ToCompetitionReview(req)
+
+	authInfo := util.GetAuthInfo(ctx)
+
+	if err := c.competitionService.SubmitReview(authInfo, competitionID, review); err != nil {
+		switch {
+		case errors.Is(err, service.ErrCompetitionNotRegistered):
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Review cannot be submitted because you are not registered for this competition"})
+		default:
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to submit review"})
+		}
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Review submitted successfully"})
+}
+
+func (c *CompetitionController) GetCompetitionReviews(ctx *fiber.Ctx) error {
+	competitionID, err := util.ParseCtxParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid competition ID"})
+	}
+
+	reviews, err := c.competitionService.GetCompetitionReviews(competitionID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get reviews"})
+	}
+
+	response := mapper.ToCompetitionReviewsResponse(reviews)
+
+	return ctx.JSON(response)
 }
