@@ -9,6 +9,10 @@ Backend for  YukLomba
 - A running PostgreSQL/MySQL database (or use SQLite)
 - [Air](https://github.com/cosmtrek/air) for live reloading (optional but recommended)
 
+### 📄 Documentation
+Link to API Documentation
+[Click here.](https://www.postman.com/yuk-lomba-1446/yuk-lomba-workspace/collection/to4rv27/yuklomba-api-documentation)
+
 ### 📥 Installation
 
 ```bash
