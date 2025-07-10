@@ -1,0 +1,148 @@
+@startuml
+skinparam classFontSize 12
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ********** USER ENTITY **********
+class User {
+  - id: UUID
+  - username: String
+  - email: String
+  - password: String
+  - role: String
+  - university: String
+  - interests: String
+  - organization_id: UUID
+  - password_changed_at: DateTime
+  - created_at: DateTime
+  - updated_at: DateTime
+  + organization: Organization
+  + joined_competitions: List<Competition>
+  --
+  + User(
+`      id: UUID,
+`      username: String,
+`      email: String,
+`      password: String,
+`      role: String,
+`      university: String,
+`      interests: String,
+`      organization_id: UUID,
+`      password_changed_at: DateTime,
+`      created_at: DateTime,
+`      updated_at: DateTime
+    )
+}
+
+' ********** COMPETITION ENTITY **********
+class Competition {
+  - id: UUID
+  - title: String
+  - type: String
+  - description: String
+  - image: List<String>
+  - deadline: DateTime
+  - category: String
+  - eventLink: String
+  - results: String
+  - created_at: DateTime
+  - updated_at: DateTime
+  + organizer: Organization
+  + registrations: List<Registration>
+  --
+  + Competition(
+`      id: UUID,
+`      title: String,
+`      type: String,
+`      description: String,
+`      image: List<String>,
+`      deadline: DateTime,
+`      category: String,
+`      eventLink: String,
+`      results: String,
+`      created_at: DateTime,
+`      updated_at: DateTime
+    )
+}
+
+' ********** ORGANIZATION ENTITY **********
+class Organization {
+  - id: UUID
+  - name: String
+  - logo: String
+  - description: String
+  - created_at: DateTime
+  - updated_at: DateTime
+  + competitions: List<Competition>
+  --
+  + Organization(
+`      id: UUID,
+`      name: String,
+`      logo: String,
+`      description: String,
+`      created_at: DateTime,
+`      updated_at: DateTime
+    )
+}
+
+' ********** REGISTRATION ENTITY **********
+class Registration {
+  - user_id: UUID
+  - competition_id: UUID
+  - created_at: DateTime
+  - updated_at: DateTime
+  + user: User
+  + competition: Competition
+  --
+  + Registration(
+`      user_id: UUID,
+`      competition_id: UUID,
+`      created_at: DateTime,
+`      updated_at: DateTime
+    )
+}
+
+' ********** REVIEW ENTITY **********
+class Review {
+  - id: UUID
+  - rating: int
+  - comment: String
+  - created_at: DateTime
+  - user_id: UUID
+  - competition_id: UUID
+  + user: User
+  + competition: Competition
+  --
+  + Review(
+`      id: UUID,
+`      rating: int,
+`      comment: String,
+`      created_at: DateTime,
+`      user_id: UUID,
+`      competition_id: UUID
+    )
+}
+
+' ********** RELATIONSHIPS **********
+User "1" -- "0..*" Registration
+User "1" -- "0..*" Review
+User "1" -- "0..*" Organization
+Competition "1" -- "0..*" Registration
+Competition "1" -- "0..*" Review
+Competition "1" -- "1" Organization
+
+' ********** NOTES **********
+note top of User
+Entity representing system users
+- One-to-many with Organization
+- One-to-many with Registration
+- One-to-many with Review
+end note
+
+note bottom of Competition
+Entity representing competitions
+- Many-to-one with Organization
+- One-to-many with Registration
+- One-to-many with Review
+end note
+@enduml

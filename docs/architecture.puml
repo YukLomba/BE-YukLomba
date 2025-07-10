@@ -1,69 +1,17 @@
 @startuml
-skinparam backgroundColor #FFFFFF
-skinparam componentStyle uml2
-title BE YukLomba System Architecture
+skinparam monochrome true
+skinparam shadowing false
 
-package "API Layer" {
-  [HTTP Controllers] as controllers
-  [Routes] as routes
-  [Middleware] as middleware
-}
+rectangle "Frontend" as frontend
+rectangle "Backend" as backend
+database "Database" as db
+rectangle "Third Party" as third_party
 
-package "Business Logic" {
-  [Auth Service] as auth_service
-  [Competition Service] as comp_service
-  [Organization Service] as org_service
-  [User Service] as user_service
-}
+frontend -right-> backend : "HTTP/HTTPS"
+backend -right-> db : "SQL"
+backend -down-> third_party : "API Calls"
 
-package "Data Access" {
-  [User Repository] as user_repo
-  [Competition Repository] as comp_repo
-  [Organization Repository] as org_repo
-}
-
-package "Infrastructure" {
-  [PostgreSQL Database] as db
-  [JWT Utilities] as jwt
-  [Password Hashing] as pwd
-  [Google OAuth] as google
-}
-
-[API Client] as client
-
-client --> routes : HTTP Requests
-routes --> controllers : Route handling
-controllers --> middleware : Auth/Validation
-middleware --> auth_service : Token verification
-
-controllers --> auth_service : Auth operations
-controllers --> comp_service : Competition ops
-controllers --> org_service : Organization ops
-controllers --> user_service : User management
-
-auth_service --> user_repo : User data
-comp_service --> comp_repo : Competition data
-org_service --> org_repo : Organization data
-user_service --> user_repo : User data
-
-user_repo --> db : CRUD Operations
-comp_repo --> db : CRUD Operations
-org_repo --> db : CRUD Operations
-
-auth_service --> jwt : Token generation\nvalidation
-auth_service --> pwd : Password hashing\nverification
-auth_service --> google : OAuth integration
-
-note right of db
-  PostgreSQL Database
-  - Users
-  - Competitions
-  - Organizations
-  - Registrations
-end note
-
-cloud {
-  [External Services] as external
-  google - external
-}
+note right of frontend: React Applications
+note left of db: PostgreSQL
+note bottom of third_party: Google OAuth\nPayment Gateway
 @enduml

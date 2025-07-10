@@ -1,0 +1,200 @@
+@startuml
+skinparam classFontSize 12
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ********** REPOSITORY INTERFACES **********
+interface UserRepository {
+  +FindByID(uuid.UUID): (*entity.User, error)
+  +FindByEmail(string): (*entity.User, error)
+  +FindByUsername(string): (*entity.User, error)
+  +FindAll: ([]*entity.User, error)
+  +Create(*entity.User): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +CountByRole(string): (int64, error)
+}
+
+interface CompetitionRepository {
+  +FindByID(uuid.UUID): (*entity.Competition, error)
+  +FindAll(): ([]*entity.Competition, error)
+  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
+  +Create(*entity.Competition): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +Delete(uuid.UUID): error
+  +FindUserRegistration(uuid.UUID, uuid.UUID): (*entity.Registration, error)
+  +CreateUserRegistration(*entity.Registration): error
+}
+
+interface OrganizationRepository {
+  +FindByID(uuid.UUID): (*entity.Organization, error)
+  +FindAll(): ([]*entity.Organization, error)
+  +Create(*entity.Organization): error
+  +Update(*entity.Organization): error
+  +Delete(uuid.UUID): error
+}
+
+interface ReviewRepository {
+  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
+  +Create(*entity.Review): error
+  +GetAverageRatingAll(): (float32, error)
+}
+
+' ********** REPOSITORY IMPLEMENTATIONS **********
+class UserRepositoryImpl {
+  -db *gorm.DB
+  +NewUserRepository(db *gorm.DB): UserRepository
+  +FindByID(uuid.UUID): ([]*entity.User, error)
+  +FindByEmail(string): (*entity.User, error)
+  +FindByUsername(string): (*entity.User, error)
+  +FindAll: (*entity.User, error)
+  +Create(*entity.User): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+}
+
+class CompetitionRepositoryImpl {
+  -db *gorm.DB
+  +NewCompetitionRepository(db *gorm.DB): CompetitionRepository
+  +FindByID(uuid.UUID): (*entity.Competition, error)
+  +FindAll(): ([]*entity.Competition, error)
+  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
+  +Create(*entity.Competition): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +Delete(uuid.UUID): error
+}
+
+class OrganizationRepositoryImpl {
+  -db *gorm.DB
+  +NewOrganizationRepository(db *gorm.DB): OrganizationRepository
+  +FindByID(uuid.UUID): (*entity.Organization, error)
+  +FindAll(): ([]*entity.Organization, error)
+  +Create(*entity.Organization): error
+  +Update(*entity.Organization): error
+  +Delete(uuid.UUID): error
+}
+
+class ReviewRepositoryImpl {
+  -db *gorm.DB
+  +NewReviewRepository(db *gorm.DB): ReviewRepository
+  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
+  +Create(*entity.Review): error
+  +GetAverageRatingAll(): (float32, error)
+}
+
+' ********** RELATIONSHIPS **********
+UserRepositoryImpl .up.|> UserRepository
+CompetitionRepositoryImpl .up.|> CompetitionRepository
+OrganizationRepositoryImpl .up.|> OrganizationRepository
+ReviewRepositoryImpl .up.|> ReviewRepository
+
+note top of UserRepository
+Methods for user data access:
+- Basic CRUD operations
+- Specialized queries
+end note
+
+note bottom of CompetitionRepository
+Handles competition data:
+- Organizer-specific queries
+- Registration management
+end note
+@enduml
+@startuml
+skinparam classFontSize 12
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ********** REPOSITORY INTERFACES **********
+interface UserRepository {
+  +FindByID(uuid.UUID): (*entity.User, error)
+  +FindByEmail(string): (*entity.User, error)
+  +FindByUsername(string): (*entity.User, error)
+  +FindAll: ([]*entity.User, error)
+  +Create(*entity.User): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +CountByRole(string): (int64, error)
+}
+
+interface CompetitionRepository {
+  +FindByID(uuid.UUID): (*entity.Competition, error)
+  +FindAll(): ([]*entity.Competition, error)
+  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
+  +Create(*entity.Competition): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +Delete(uuid.UUID): error
+  +FindUserRegistration(uuid.UUID, uuid.UUID): (*entity.Registration, error)
+  +CreateUserRegistration(*entity.Registration): error
+}
+
+interface OrganizationRepository {
+  +FindByID(uuid.UUID): (*entity.Organization, error)
+  +FindAll(): ([]*entity.Organization, error)
+  +Create(*entity.Organization): error
+  +Update(*entity.Organization): error
+  +Delete(uuid.UUID): error
+}
+
+interface ReviewRepository {
+  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
+  +Create(*entity.Review): error
+  +GetAverageRatingAll(): (float32, error)
+}
+
+' ********** REPOSITORY IMPLEMENTATIONS **********
+class UserRepositoryImpl {
+  -db *gorm.DB
+  +NewUserRepository(db *gorm.DB): UserRepository
+  +FindByID(uuid.UUID): ([]*entity.User, error)
+  +FindByEmail(string): (*entity.User, error)
+  +FindByUsername(string): (*entity.User, error)
+  +FindAll: (*entity.User, error)
+  +Create(*entity.User): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+}
+
+class CompetitionRepositoryImpl {
+  -db *gorm.DB
+  +NewCompetitionRepository(db *gorm.DB): CompetitionRepository
+  +FindByID(uuid.UUID): (*entity.Competition, error)
+  +FindAll(): ([]*entity.Competition, error)
+  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
+  +Create(*entity.Competition): error
+  +Update(uuid.UUID, *map[string]interface{}): error
+  +Delete(uuid.UUID): error
+}
+
+class OrganizationRepositoryImpl {
+  -db *gorm.DB
+  +NewOrganizationRepository(db *gorm.DB): OrganizationRepository
+  +FindByID(uuid.UUID): (*entity.Organization, error)
+  +FindAll(): ([]*entity.Organization, error)
+  +Create(*entity.Organization): error
+  +Update(*entity.Organization): error
+  +Delete(uuid.UUID): error
+}
+
+class ReviewRepositoryImpl {
+  -db *gorm.DB
+  +NewReviewRepository(db *gorm.DB): ReviewRepository
+  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
+  +Create(*entity.Review): error
+  +GetAverageRatingAll(): (float32, error)
+}
+
+' ********** RELATIONSHIPS **********
+UserRepositoryImpl .up.|> UserRepository
+CompetitionRepositoryImpl .up.|> CompetitionRepository
+OrganizationRepositoryImpl .up.|> OrganizationRepository
+ReviewRepositoryImpl .up.|> ReviewRepository
+
+note top of UserRepository
+Methods for user data access:
+- Basic CRUD operations
+- Specialized queries
+end note
+
+note bottom of CompetitionRepository
+Handles competition data:
+- Organizer-specific queries
+- Registration management
+end note
+@enduml

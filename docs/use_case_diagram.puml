@@ -1,0 +1,82 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #LightBlue
+  BorderColor DarkSlateGray
+}
+
+actor User as user
+actor Organizer as organizer
+actor Admin as admin
+
+package "Authentication" {
+  (Register) as uc1
+  (Login) as uc2
+  (Google OAuth) as uc3
+  (Logout) as uc4
+  
+  user --> uc1
+  user --> uc2
+  user --> uc3
+  user --> uc4
+  organizer --> uc1
+  organizer --> uc2
+  organizer --> uc3
+  organizer --> uc4
+  admin --> uc1
+  admin --> uc2
+  admin --> uc3
+  admin --> uc4
+}
+
+package "Competition Management" {
+  (View Competitions) as uc5
+  (Register to Competition) as uc6
+  (Create Competition) as uc7
+  (Update Competition) as uc8
+  (Delete Competition) as uc9
+  
+  user --> uc5
+  user --> uc6
+  organizer --> uc7
+  organizer --> uc8
+  organizer --> uc9
+}
+
+package "User Management" {
+  (View Profile) as uc10
+  (Update Profile) as uc11
+  (Manage Users) as uc12
+  (Manage Organizations) as uc13
+  
+  user --> uc10
+  user --> uc11
+  admin --> uc12
+  admin --> uc13
+}
+
+package "System" {
+  (View Logs) as uc14
+  (System Monitoring) as uc15
+  
+  admin --> uc14
+  admin --> uc15
+}
+
+uc2 .> uc3 : extends
+uc7 .> uc5 : include
+uc8 .> uc5 : include
+
+note right of uc12
+  [Admin Only]
+  - Suspend users
+  - Verify organizers
+  - Manage roles
+end note
+
+note bottom of organizer
+  Organizer is a specialized User
+  with competition management privileges
+end note
+@enduml

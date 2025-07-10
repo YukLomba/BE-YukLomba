@@ -1,0 +1,20 @@
+@startuml
+participant Client
+participant AuthController
+participant AuthService
+participant Database
+
+Client -> AuthController: POST /api/v1/auth/register
+AuthController -> AuthService: Register(registerRequest)
+AuthService -> Database: Check email existence
+alt Email available
+  AuthService -> AuthService: Hash password
+  AuthService -> Database: Save user
+  Database --> AuthService: User record
+  AuthService --> AuthController: User data
+  AuthController --> Client: 201 Created
+else Email exists
+  AuthService --> AuthController: Error
+  AuthController --> Client: 409 Conflict
+end
+@enduml

@@ -1,0 +1,126 @@
+@startuml
+skinparam classFontSize 12
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ********** AUTH SERVICE **********
+interface AuthService {
+  + {abstract} Register(req: RegisterRequest): (User, error)
+  + {abstract} Login(req: LoginRequest): (TokenResponse, error)
+  + {abstract} GetGoogleOauthUrl(): (string, error)
+  + {abstract} SignInWithGoogle(code: string, state: string): (TokenResponse, error)
+  + {abstract} ValidateToken(token: string): (JWTClaims, error)
+  + {abstract} CompleteRegistration(userID: UUID, role: string): (User, error)
+}
+
+class AuthServiceImpl {
+  - userRepo: UserRepository
+  - config: config.Auth
+  + NewAuthService(userRepo: UserRepository, cfg: config.Auth): AuthService
+  + Register(req: RegisterRequest): (User, error)
+  + Login(req: LoginRequest): (TokenResponse, error)
+  + GetGoogleOauthUrl(): (string, error)
+  + SignInWithGoogle(code: string, state: string): (TokenResponse, error)
+  + ValidateToken(token: string): (JWTClaims, error)
+  + CompleteRegistration(userID: UUID, role: string): (User, error)
+}
+
+AuthServiceImpl .up.|> AuthService
+AuthServiceImpl *-- UserRepository
+AuthServiceImpl *-- config.Auth
+
+' ********** COMPETITION SERVICE **********  
+interface CompetitionService {
+  + {abstract} GetCompetition(id: UUID): (Competition, error)
+  + {abstract} GetAllCompetitions(filter: CompetitionFilter): ([]Competition, error)
+  + {abstract} CreateCompetition(authInfo: AuthInfo, competition: Competition): error
+  + {abstract} RegisterUserToCompetition(authInfo: AuthInfo, competitionID: UUID): error
+  + {abstract} SubmitReview(authInfo: AuthInfo, CompetitionId: UUID, review: Review): error
+}
+
+class CompetitionServiceImpl {
+  - competitionRepo: CompetitionRepository
+  - reviewRepo: ReviewRepository
+  + NewCompetitionService(competitionRepo: CompetitionRepository, reviewRepo: ReviewRepository): CompetitionService
+  + GetCompetition(id: UUID): (Competition, error)
+  + GetAllCompetitions(filter: CompetitionFilter): ([]Competition, error)
+  + CreateCompetition(authInfo: AuthInfo, competition: Competition): error
+  + RegisterUserToCompetition(authInfo: AuthInfo, competitionID: UUID): error
+  + SubmitReview(authInfo: AuthInfo, CompetitionId: UUID, review: Review): error
+}
+
+CompetitionServiceImpl .up.|> CompetitionService
+CompetitionServiceImpl *-- CompetitionRepository
+CompetitionServiceImpl *-- ReviewRepository
+
+' ********** ORGANIZATION SERVICE **********
+interface OrganizationService {
+  + {abstract} GetOrganization(id: UUID): (Organization, error)
+  + {abstract} CreateOrganization(org: Organization, authInfo: AuthInfo): error
+  + {abstract} UpdateOrganization(authInfo: AuthInfo, id: UUID, data: map[string]interface{}): error
+}
+
+class OrganizationServiceImpl {
+  - orgRepo: OrganizationRepository
+  - userRepo: UserRepository
+  + NewOrganizationService(orgRepo: OrganizationRepository, userRepo: UserRepository): OrganizationService
+  + GetOrganization(id: UUID): (Organization, error)
+  + CreateOrganization(org: Organization, authInfo: AuthInfo): error
+  + UpdateOrganization(authInfo: AuthInfo, id: UUID, data: map[string]interface{}): error
+}
+
+OrganizationServiceImpl .up.|> OrganizationService
+OrganizationServiceImpl *-- OrganizationRepository
+OrganizationServiceImpl *-- UserRepository
+
+' ********** USER SERVICE **********
+interface UserService {
+  + {abstract} GetUser(id: UUID): (User, error)
+  + {abstract} UpdateUser(authInfo: AuthInfo, id: UUID, data: map[string]interface{}): error
+  + {abstract} GetAllUserRegistration(id: UUID): ([]Competition, error)
+}
+
+class UserServiceImpl {
+  - userRepo: UserRepository
+  + NewUserService(userRepo: UserRepository): UserService
+  + GetUser(id: UUID): (User, error)
+  + UpdateUser(authInfo: AuthInfo, id: UUID, data: map[string]interface{}): error
+  + GetAllUserRegistration(id: UUID): ([]Competition, error)
+}
+
+UserServiceImpl .up.|> UserService
+UserServiceImpl *-- UserRepository
+
+' ********** ANALYTICS SERVICE **********
+interface AnalyticsService {
+  + {abstract} GetDashboard(authInfo: AuthInfo): (DashboardResponse, error)
+  + {abstract} GetCompetitionAnalytics(competitionID: UUID): (CompetitionAnalytics, error)
+}
+
+class AnalyticsServiceImpl {
+  - userRepo: UserRepository
+  - competitionRepo: CompetitionRepository
+  - reviewRepo: ReviewRepository
+  + NewAnalyticsService(userRepo: UserRepository, competitionRepo: CompetitionRepository, reviewRepo: ReviewRepository): AnalyticsService
+  + GetDashboard(authInfo: AuthInfo): (DashboardResponse, error)
+  + GetCompetitionAnalytics(competitionID: UUID): (CompetitionAnalytics, error)
+}
+
+AnalyticsServiceImpl .up.|> AnalyticsService
+AnalyticsServiceImpl *-- UserRepository
+AnalyticsServiceImpl *-- CompetitionRepository
+AnalyticsServiceImpl *-- ReviewRepository
+
+' ********** SERVICE RELATIONSHIPS **********
+note top of AuthServiceImpl
+Dependencies injected via constructor
+end note
+
+note top of CompetitionServiceImpl
+Uses ReviewRepository for review operations
+end note
+
+note top of OrganizationServiceImpl
+Manages user organization relationships
+end note
+@enduml

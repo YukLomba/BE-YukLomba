@@ -1,0 +1,18 @@
+[Unit]
+Description=YukLomba Backend Service
+After=network.target
+
+[Service]
+User=deploy
+Group=deploy
+WorkingDirectory=/home/deploy/yuklomba
+EnvironmentFile=/home/deploy/yuklomba/.env
+ExecStart=/home/deploy/yuklomba/yuklomba-backend
+Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=yuklomba-backend
+
+[Install]
+WantedBy=multi-user.target

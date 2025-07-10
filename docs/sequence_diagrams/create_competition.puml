@@ -1,0 +1,19 @@
+@startuml
+participant Client
+participant CompetitionController
+participant CompetitionService
+participant Database
+
+Client -> CompetitionController: POST /api/v1/competitions
+CompetitionController -> CompetitionService: CreateCompetition(authInfo, compData)
+CompetitionService -> Database: Validate organizer
+alt Valid organizer
+  CompetitionService -> Database: Save competition
+  Database --> CompetitionService: Competition created
+  CompetitionService --> CompetitionController: Success
+  CompetitionController --> Client: 201 Created
+else Invalid organizer
+  CompetitionService --> CompetitionController: Error
+  CompetitionController --> Client: 403 Forbidden
+end
+@enduml

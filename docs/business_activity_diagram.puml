@@ -1,0 +1,82 @@
+@startuml
+!define RECTANGLE rect
+!define SWIMLANE swimlane
+!define NOTE note
+
+RECTANGLE "Student" as student
+RECTANGLE "Organizer" as organizer
+RECTANGLE "Admin" as admin
+RECTANGLE "Backend" as backend
+RECTANGLE "Database" as db
+RECTANGLE "Google OAuth" as google
+RECTANGLE "Payment Gateway" as payment
+
+SWIMLANE student {
+  :Browse Competitions;
+  :Register to Competition;
+  :Submit Review;
+}
+
+SWIMLANE organizer {
+  :Create Competition;
+  :Manage Registrations;
+}
+
+SWIMLANE admin {
+  :View Analytics;
+  :Manage Users;
+}
+
+SWIMLANE backend {
+  :Query active competitions;
+  :Check eligibility;
+  :Validate participation;
+  :Save review;
+  :Save competition;
+  :Get registrations;
+  :Aggregate data;
+  :Query users;
+}
+
+SWIMLANE db {
+  :Return list;
+  :Return status;
+  :Return validation;
+  :Return data;
+  :Return reports;
+  :Return list;
+}
+
+SWIMLANE google {
+  :Authenticate User;
+  :Return token;
+}
+
+SWIMLANE payment {
+  :Process Payment;
+  :Confirm transaction;
+}
+
+NOTE right of student
+  Student activities:
+  - Browse & register
+  - Submit reviews
+end NOTE
+
+NOTE left of organizer
+  Organizer tasks:
+  - Create competitions
+  - Manage participants
+end NOTE
+
+NOTE right of admin
+  Admin functions:
+  - Analytics
+  - User management
+end NOTE
+
+NOTE bottom of google
+  External services
+  for auth & payments
+end NOTE
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+participant Client
+participant UserController
+participant UserService
+participant Database
+
+Client -> UserController: PUT /api/v1/users/{id}
+UserController -> UserService: UpdateUser(userID, updateData)
+UserService -> Database: Get user by ID
+Database --> UserService: User data
+
+alt User not found
+  UserService --> UserController: Error
+  UserController --> Client: 404 Not Found
+else Unauthorized access
+  UserService --> UserController: Error
+  UserController --> Client: 403 Forbidden
+else
+  alt Password change requested
+    UserService -> UserService: Hash new password
+    UserService -> Database: Update password
+  else
+    UserService -> Database: Update user data
+  end
+  Database --> UserService: Updated user
+  UserService --> UserController: Success
+  UserController --> Client: 200 OK with user data
+end
+@enduml

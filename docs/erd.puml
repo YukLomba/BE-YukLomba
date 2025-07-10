@@ -36,8 +36,19 @@ entity Registration {
   created_at: DateTime
 }
 
+entity Review {
+  *id: UUID
+  user_id: UUID
+  competition_id: UUID
+  rating: Integer
+  comment: Text
+  created_at: DateTime
+}
+
 User }o--|| Registration
 Competition }o--|| Registration 
+User ||--o{ Review : "writes"
+Competition ||--o{ Review : "has"
 User |o--o{ Organization : "belongs to"
 Organization ||--o{ Competition : organizes
 @enduml

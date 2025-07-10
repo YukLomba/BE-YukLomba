@@ -1,0 +1,29 @@
+@startuml
+participant Client
+participant AuthController
+participant AuthService
+participant UserRepository
+participant Database
+
+Client -> AuthController: POST /api/v1/auth/login
+AuthController -> AuthService: Login(loginRequest)
+AuthService -> UserRepository: FindByEmail(email)
+UserRepository -> Database: Query user
+Database --> UserRepository: User data
+
+alt User not found
+  UserRepository --> AuthService: Error
+  AuthService --> AuthController: Error
+  AuthController --> Client: 401 Unauthorized
+else
+  AuthService -> AuthService: Verify password
+  alt Password invalid
+    AuthService --> AuthController: Error
+    AuthController --> Client: 401 Unauthorized
+  else
+    AuthService -> AuthService: Generate JWT
+    AuthService --> AuthController: Token response
+    AuthController --> Client: 200 OK with token
+  end
+end
+@enduml

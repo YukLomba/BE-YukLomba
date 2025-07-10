@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F5F5F5
+skinparam swimlaneWidth 200
+skinparam swimlanePadding 10
+
+' ========== ORGANIZER COMPETITION MANAGEMENT ==========
+|Organizer|
+start
+:Access organizer dashboard;
+|Frontend|
+:Show organizer controls;
+|Organizer|
+:Select competition management;
+|Frontend|
+:GET /api/v1/organizer/competitions;
+|Backend|
+:Validate organizer;
+|Database|
+:Query organizer's competitions;
+|Backend|
+:Return 200 OK;
+|Frontend|
+:Show competition list;
+|Organizer|
+:Select action;
+repeat
+  if (Action == Create) then (Yes)
+    |Organizer|
+    :Fill competition form;
+    |Frontend|
+    :POST /api/v1/organizer/competitions;
+    |Backend|
+    :Validate organizer;
+    |Database|
+    :Create competition;
+    |Backend|
+    :Return 201 Created;
+    |Frontend|
+    :Show success;
+  else if (Action == Update) then (Yes)
+    |Organizer|
+    :Edit competition;
+    |Frontend|
+    :PUT /api/v1/organizer/competitions/{id};
+    |Backend|
+    :Validate ownership;
+    |Database|
+    :Update competition;
+    |Backend|
+    :Return 200 OK;
+    |Frontend|
+    :Show success;
+  else if (Action == Delete) then (Yes)
+    |Organizer|
+    :Confirm delete;
+    |Frontend|
+    :DELETE /api/v1/organizer/competitions/{id};
+    |Backend|
+    :Validate ownership;
+    |Database|
+    :Delete competition;
+    |Backend|
+    :Return 204 No Content;
+    |Frontend|
+    :Show success;
+  endif
+repeat while (More actions?) is (Yes)
+|Organizer|
+stop
+@enduml

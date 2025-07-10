@@ -1,0 +1,83 @@
+@startuml
+skinparam classFontSize 12
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ********** AUTH CONTROLLER **********
+class AuthController {
+  - authService: AuthService
+  + Register(c *gin.Context)
+  + Login(c *gin.Context)
+  + GetGoogleOauthUrl(c *gin.Context)
+  + SignInWithGoogle(c *gin.Context)
+  + ValidateToken(c *gin.Context)
+  + CompleteRegistration(c *gin.Context)
+}
+
+' ********** COMPETITION CONTROLLER **********
+class CompetitionController {
+  - competitionService: CompetitionService
+  + GetCompetition(c *gin.Context)
+  + GetAllCompetitions(c *gin.Context)
+  + CreateCompetition(c *gin.Context)
+  + UpdateCompetition(c *gin.Context)
+  + DeleteCompetition(c *gin.Context)
+  + RegisterUserToCompetition(c *gin.Context)
+  + SubmitReview(c *gin.Context)
+  + GetCompetitionReviews(c *gin.Context)
+}
+
+' ********** ORGANIZATION CONTROLLER **********
+class OrganizationController {
+  - organizationService: OrganizationService
+  + GetOrganization(c *gin.Context)
+  + GetAllOrganizations(c *gin.Context)
+  + CreateOrganization(c *gin.Context)
+  + UpdateOrganization(c *gin.Context)
+  + DeleteOrganization(c *gin.Context)
+}
+
+' ********** USER CONTROLLER **********
+class UserController {
+  - userService: UserService
+  + GetUser(c *gin.Context)
+  + GetAllUsers(c *gin.Context)
+  + UpdateUser(c *gin.Context)
+  + GetAllUserRegistration(c *gin.Context)
+}
+
+' ********** ANALYTICS CONTROLLER **********
+class AnalyticsController {
+  - analyticsService: AnalyticsService
+  + GetDashboard(c *gin.Context)
+  + GetCompetitionAnalytics(c *gin.Context)
+}
+
+' ********** RELATIONSHIPS **********
+AuthController *-- AuthService
+CompetitionController *-- CompetitionService
+OrganizationController *-- OrganizationService
+UserController *-- UserService
+AnalyticsController *-- AnalyticsService
+
+' ********** NOTES **********
+note top of AuthController
+Menggunakan:
+- AuthMiddleware
+- JSON Binding
+- Error Handler
+end note
+
+note top of CompetitionController
+Menggunakan:
+- AuthMiddleware
+- Role Validation
+- Request Validation
+end note
+
+note top of OrganizationController
+Menggunakan:
+- Admin/Organizer Authorization
+- Request Validation
+end note
+@enduml

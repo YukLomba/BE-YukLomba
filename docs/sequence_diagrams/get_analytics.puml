@@ -1,0 +1,26 @@
+@startuml
+participant Client
+participant AnalyticsController
+participant AnalyticsService
+participant UserRepository
+participant CompetitionRepository
+participant ReviewRepository
+participant Database
+
+Client -> AnalyticsController: GET /api/v1/analytics/dashboard
+AnalyticsController -> AnalyticsService: GetDashboard(authInfo)
+AnalyticsService -> UserRepository: CountByRole("student")
+UserRepository -> Database: Query count
+Database --> UserRepository: Count result
+AnalyticsService -> UserRepository: CountByRole("organizer")
+UserRepository -> Database: Query count
+Database --> UserRepository: Count result
+AnalyticsService -> CompetitionRepository: CountAllRegistrations()
+CompetitionRepository -> Database: Query count
+Database --> CompetitionRepository: Count result
+AnalyticsService -> ReviewRepository: GetAverageRatingAll()
+ReviewRepository -> Database: Query average
+Database --> ReviewRepository: Average result
+AnalyticsService --> AnalyticsController: Dashboard data
+AnalyticsController --> Client: 200 OK with analytics
+@enduml

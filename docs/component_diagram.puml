@@ -1,0 +1,73 @@
+@startuml
+!pragma layout smetana
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam component {
+  BackgroundColor White
+  BorderColor Black
+  ArrowColor Black
+}
+
+package "API Layer" {
+  [API Gateway] as gateway
+  package "Routers" {
+    [Auth Router] as auth_router
+    [Competition Router] as comp_router
+    [User Router] as user_router
+    [Organization Router] as org_router
+  }
+  [Auth Controller] as auth_controller
+  [Competition Controller] as comp_controller  
+  [User Controller] as user_controller
+  [Organization Controller] as org_controller
+  
+  gateway --> auth_router
+  gateway --> comp_router
+  gateway --> user_router
+  gateway --> org_router
+  
+  auth_router --> auth_controller
+  comp_router --> comp_controller
+  user_router --> user_controller
+  org_router --> org_controller
+}
+
+package "Service Layer" {
+  [Auth Service] as auth_service
+  [Competition Service] as comp_service
+  [User Service] as user_service
+  [Organization Service] as org_service
+  
+  auth_controller --> auth_service
+  comp_controller --> comp_service
+  user_controller --> user_service
+  org_controller --> org_service
+}
+
+package "Repository Layer" {
+  [User Repository] as user_repo
+  [Competition Repository] as comp_repo
+  [Organization Repository] as org_repo
+  
+  auth_service --> user_repo
+  comp_service --> comp_repo
+  user_service --> user_repo
+  org_service --> org_repo
+}
+
+package "Database" {
+  [PostgreSQL] as db
+  
+  user_repo --> db
+  comp_repo --> db
+  org_repo --> db
+}
+
+[Google OAuth] as google
+auth_service --> google
+
+note top of gateway: Handles all incoming HTTP requests\nand routes to appropriate controllers
+note right of auth_service: Business logic for:\n- Authentication\n- Authorization\n- User management
+note left of db: Central database storing\nall application data
+@enduml

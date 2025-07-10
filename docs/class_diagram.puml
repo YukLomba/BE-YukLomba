@@ -21,10 +21,12 @@ class Competition {
   -title: String
   -type: String
   -description: Text
+  -image: String[]
   -deadline: DateTime
   -category: String
   -eventLink: String
   -results: String
+  -organizer_id: UUID
 }
 
 class Organization {
@@ -40,6 +42,16 @@ class Registration {
   -user_id: UUID
   -competition_id: UUID
   -created_at: DateTime
+}
+
+class Review {
+  -id: UUID
+  -user_id: UUID
+  -competition_id: UUID
+  -rating: Integer
+  -comment: Text
+  -created_at: DateTime
+  -updated_at: DateTime
 }
 
 ' ********** SERVICES **********
@@ -69,6 +81,12 @@ class OrganizationService {
 class UserService {
   +UpdateUser(uuid.UUID, *map[string]interface{}): error
   +GetAllUserRegistration(uuid.UUID): ([]*entity.Registration, error)
+  +CountByRole(string): (int64, error)
+}
+
+class AnalyticsService {
+  +GetDashboard(*dto.AuthInfo): (*dto.DashboardResponse, error)
+  +GetCompetitionAnalytics(uuid.UUID): (*dto.CompetitionAnalytics, error)
 }
 
 ' ********** REPOSITORIES **********
@@ -83,6 +101,9 @@ interface CompetitionRepository {
   +FindByID(uuid.UUID): (*entity.Competition, error)
   +Create(*entity.Competition): error
   +Update(uuid.UUID, *map[string]interface{}): error
+  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
+  +CountRegistrations(uuid.UUID): (int64, error)
+  +CountAllRegistrations(): (int64, error)
 }
 
 interface OrganizationRepository {
@@ -92,13 +113,24 @@ interface OrganizationRepository {
   +Delete(uuid.UUID): error
 }
 
+interface ReviewRepository {
+  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
+  +GetAverageRatingAll(): (float32, error)
+  +Create(*entity.Review): error
+}
+
 ' ********** RELATIONSHIPS **********
 User "1" *-- "many" Registration
 Competition "1" *-- "many" Registration
+User "1" *-- "many" Review
+Competition "1" *-- "many" Review
 Organization "1" o-- "many" Competition
 
 AuthService ..> UserRepository : depends on
 CompetitionService ..> CompetitionRepository : depends on
 OrganizationService ..> OrganizationRepository : depends on
 UserService ..> UserRepository : depends on
+AnalyticsService ..> UserRepository : depends on
+AnalyticsService ..> CompetitionRepository : depends on
+AnalyticsService ..> ReviewRepository : depends on
 @enduml

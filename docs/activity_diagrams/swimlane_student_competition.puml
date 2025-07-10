@@ -1,0 +1,100 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F5F5F5
+skinparam swimlaneWidth 200
+skinparam swimlanePadding 10
+
+' ========== STUDENT COMPETITION FLOW ==========
+|Student|
+start
+:View competitions;
+|Frontend|
+:GET /api/v1/competitions;
+|Backend|
+:Query active competitions;
+|Database|
+:Return competition list;
+|Backend|
+:Return 200 OK;
+|Frontend|
+:Show competition list;
+|Student|
+stop
+
+' ========== REGISTRATION FLOW ==========
+|Student|
+start
+:Select competition;
+|Frontend|
+:GET /api/v1/competitions/{id};
+|Backend|
+:Get competition details;
+|Database|
+:Return competition data;
+|Backend|
+:Return 200 OK;
+|Frontend|
+:Show competition details;
+|Student|
+:Click register;
+|Frontend|
+:POST /api/v1/competitions/{id}/register;
+|Backend|
+if (Deadline passed?) then (No)
+  if (Already registered?) then (No)
+    |Database|
+    :Create registration;
+    |Backend|
+    :Return 201 Created;
+    |Frontend|
+    :Show success;
+  else (Yes)
+    |Backend|
+    :Return 409 Conflict;
+    |Frontend|
+    :Show "Already registered";
+  endif
+else (Yes)
+  |Backend|
+  :Return 400 Bad Request;
+  |Frontend|
+  :Show "Registration closed";
+endif
+|Student|
+stop
+
+' ========== REVIEW FLOW ==========  
+|Student|
+start
+:Access review page;
+|Frontend|
+:GET /api/v1/competitions/{id}/reviews;
+|Backend|
+:Check registration;
+|Database|
+if (Registered?) then (Yes)
+  |Backend|
+  :Return review form;
+  |Frontend|
+  :Show review form;
+  |Student|
+  :Submit review;
+  |Frontend|
+  :POST /api/v1/competitions/{id}/reviews;
+  |Backend|
+  :Save review;
+  |Database|
+  :Store review data;
+  |Backend|
+  :Return 201 Created;
+  |Frontend|
+  :Show success;
+else (No)
+  |Backend|
+  :Return 403 Forbidden;
+  |Frontend|
+  :Show "Not registered";
+endif
+|Student|
+stop
+@enduml

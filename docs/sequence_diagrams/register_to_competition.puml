@@ -1,0 +1,31 @@
+@startuml
+participant Client
+participant CompetitionController
+participant CompetitionService
+participant Database
+
+Client -> CompetitionController: POST /api/v1/competitions/{id}/register
+CompetitionController -> CompetitionService: RegisterUserToCompetition(authInfo, compID)
+CompetitionService -> Database: Get competition details
+Database --> CompetitionService: Competition data
+
+alt Deadline passed
+  CompetitionService --> CompetitionController: Error
+  CompetitionController --> Client: 400 Bad Request
+else Not authenticated
+  CompetitionService --> CompetitionController: Error
+  CompetitionController --> Client: 401 Unauthorized
+else
+  CompetitionService -> Database: Check existing registration
+  Database --> CompetitionService: Registration status
+  alt Already registered
+    CompetitionService --> CompetitionController: Error
+    CompetitionController --> Client: 409 Conflict
+  else
+    CompetitionService -> Database: Create registration
+    Database --> CompetitionService: Success
+    CompetitionService --> CompetitionController: Success
+    CompetitionController --> Client: 201 Created
+  end
+end
+@enduml

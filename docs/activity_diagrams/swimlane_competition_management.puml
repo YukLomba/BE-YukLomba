@@ -1,0 +1,147 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F5F5F5
+skinparam swimlaneWidth 200
+skinparam swimlanePadding 10
+
+' ========== COMPETITION MANAGEMENT ==========
+|Organizer/Admin|
+start
+:Access management page;
+|Frontend|
+:Show management controls;
+|Organizer/Admin|
+:Select action;
+|Frontend|
+if (Role == Organizer) then
+  :GET /api/v1/organizer/competitions;
+else (Role == Admin)
+  :GET /api/v1/admin/competitions;
+endif
+|Backend|
+:Validate permissions;
+|Database|
+:Query competitions;
+|Backend|
+:Return 200 OK;
+|Frontend|
+:Show competition list;
+
+repeat
+  if (Action == Create) then (Yes)
+    |Organizer/Admin|
+    :Fill competition form;
+    |Frontend|
+    if (Role == Organizer) then
+      :POST /api/v1/organizer/competitions;
+    else (Role == Admin)
+      :POST /api/v1/admin/competitions;
+    endif
+    |Backend|
+    :Validate permissions;
+    |Database|
+    :Create competition;
+    |Backend|
+    :Return 201 Created;
+    |Frontend|
+    :Show success;
+  else if (Action == Update) then (Yes)
+    |Organizer/Admin|
+    :Edit competition;
+    |Frontend|
+    if (Role == Organizer) then
+      :PUT /api/v1/organizer/competitions/{id};
+    else (Role == Admin)
+      :PUT /api/v1/admin/competitions/{id};
+    endif
+    |Backend|
+    :Validate ownership;
+    |Database|
+    :Update competition;
+    |Backend|
+    :Return 200 OK;
+    |Frontend|
+    :Show success;
+  else if (Action == Delete) then (Yes)
+    |Organizer/Admin|
+    :Confirm delete;
+    |Frontend|
+    if (Role == Organizer) then
+      :DELETE /api/v1/organizer/competitions/{id};
+    else (Role == Admin)
+      :DELETE /api/v1/admin/competitions/{id};
+    endif
+    |Backend|
+    :Validate ownership;
+    |Database|
+    :Delete competition;
+    |Backend|
+    :Return 204 No Content;
+    |Frontend|
+    :Show success;
+  endif
+repeat while (More actions?) is (Yes)
+|Organizer/Admin|
+stop
+
+' ========== PARTICIPANT FLOWS ==========
+|Participant|
+start
+:View competition;
+|Frontend|
+:GET /api/v1/competitions/{id};
+|Backend|
+:Query competition;
+|Database|
+:Return competition data;
+|Backend|
+:Return details;
+|Frontend|
+:Show details;
+|Participant|
+:Click register;
+|Frontend|
+:POST /api/v1/competitions/{id}/register;
+|Backend|
+if (Deadline valid?) then (Yes)
+  |Database|
+  :Create registration;
+  |Backend|
+  :Return 201 Created;
+  |Frontend|
+  :Show success;
+else (No)
+  |Backend|
+  :Return 400 Bad Request;
+  |Frontend|
+  :Show error;
+endif
+|Participant|
+stop
+
+|Participant|
+start
+:Access review form;
+|Frontend|
+:Show review form;
+|Participant|
+:Submit review;
+|Frontend|
+:POST /api/v1/competitions/{id}/reviews;
+|Backend|
+if (Registered?) then (Yes)
+  |Database|
+  :Save review;
+  |Backend|
+  :Return 201 Created;
+  |Frontend|
+  :Show success;
+else (No)
+  |Backend|
+  :Return 403 Forbidden;
+  |Frontend|
+  :Show error;
+endif
+|Participant|
+stop
+@enduml

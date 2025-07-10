@@ -1,0 +1,35 @@
+@startuml
+participant Client
+participant AuthController
+participant AuthService
+participant GoogleAPI
+participant Database
+
+Client -> AuthController: GET /api/v1/auth/google
+AuthController -> AuthService: GetGoogleOauthUrl()
+AuthService -> GoogleAPI: Generate OAuth URL
+GoogleAPI --> AuthService: URL + state
+AuthService --> AuthController: Redirect URL
+AuthController --> Client: 302 Redirect
+
+Client -> GoogleAPI: Authenticate user
+GoogleAPI --> Client: Auth code + state
+
+Client -> AuthController: POST /api/v1/auth/google/callback
+AuthController -> AuthService: SignInWithGoogle(code, state)
+AuthService -> GoogleAPI: Exchange code for token
+GoogleAPI --> AuthService: Access token
+AuthService -> GoogleAPI: Get user info
+GoogleAPI --> AuthService: User profile
+
+alt New user
+  AuthService -> Database: Create user
+else Existing user
+  AuthService -> Database: Get user
+end
+
+Database --> AuthService: User data
+AuthService -> AuthService: Generate JWT
+AuthService --> AuthController: Token response
+AuthController --> Client: 200 OK with tokens
+@enduml

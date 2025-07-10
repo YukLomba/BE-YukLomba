@@ -1,0 +1,91 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F5F5F5
+skinparam swimlaneWidth 200
+skinparam swimlanePadding 10
+
+' ========== ADMIN COMPETITION MANAGEMENT ==========
+|Admin|
+start
+:Access admin dashboard;
+|Frontend|
+:Show admin controls;
+|Admin|
+:Select competition management;
+|Frontend|
+:GET /api/v1/admin/competitions;
+|Backend|
+:Validate admin;
+|Database|
+:Query all competitions;
+|Backend|
+:Return 200 OK;
+|Frontend|
+:Show competition list;
+|Admin|
+:Select action;
+repeat
+  if (Action == Create) then (Yes)
+    |Admin|
+    :Fill competition form;
+    |Frontend|
+    :POST /api/v1/admin/competitions;
+    |Backend|
+    :Validate admin;
+    |Database|
+    :Create competition;
+    |Backend|
+    :Return 201 Created;
+    |Frontend|
+    :Show success;
+  else if (Action == Update) then (Yes)
+    |Admin|
+    :Edit competition;
+    |Frontend|
+    :PUT /api/v1/admin/competitions/{id};
+    |Backend|
+    :Validate admin;
+    |Database|
+    :Update competition;
+    |Backend|
+    :Return 200 OK;
+    |Frontend|
+    :Show success;
+  else if (Action == Delete) then (Yes)
+    |Admin|
+    :Confirm delete;
+    |Frontend|
+    :DELETE /api/v1/admin/competitions/{id};
+    |Backend|
+    :Validate admin;
+    |Database|
+    :Delete competition;
+    |Backend|
+    :Return 204 No Content;
+    |Frontend|
+    :Show success;
+  endif
+repeat while (More actions?) is (Yes)
+|Admin|
+stop
+
+' ========== ADMIN ANALYTICS ==========  
+|Admin|
+start
+:View analytics;
+|Frontend|
+:GET /api/v1/admin/analytics;
+|Backend|
+:Generate reports;
+|Database|
+:Query registration data;
+|Database|
+:Query review data;
+|Backend|
+:Compile analytics;
+|Frontend|
+:Show dashboard;
+|Admin|
+:Export reports;
+stop
+@enduml

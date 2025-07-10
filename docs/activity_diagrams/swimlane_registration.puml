@@ -1,0 +1,114 @@
+@startuml
+!theme plain
+skinparam backgroundColor #F5F5F5
+skinparam swimlaneWidth 200
+skinparam swimlanePadding 10
+
+' ========== EMAIL REGISTRATION ==========
+|User|
+start
+:Access registration page;
+|Frontend|
+:Show email registration form;
+|User|
+:Fill email/password;
+|Frontend|
+:POST /api/v1/auth/register;
+|Backend|
+:Validate input;
+|Database|
+if (Email exists?) then (No)
+  :Create new user;
+  |Backend|
+  :Generate JWT;
+  :Return 201 Created;
+  |Frontend|
+  :Show success;
+  |User|
+  :Logged in;
+else (Yes)
+  |Backend|
+  :Return 409 Conflict;
+  |Frontend|
+  :Show error;
+endif
+|User|
+stop
+
+' ========== GOOGLE REGISTRATION/LOGIN ==========
+|User|
+start
+:Click "Continue with Google";
+|Frontend|
+:GET /api/v1/auth/google;
+|Backend|
+:Generate OAuth URL;
+|Google API|
+:Return auth URL;
+|Backend|
+:Redirect to Google;
+|Frontend|
+:Redirect user;
+|User|
+:Authenticate with Google;
+|Google API|
+:Return auth code;
+|Frontend|
+:POST callback with code;
+|Backend|
+:Exchange code for token;
+|Google API|
+:Return user info;
+|Backend|
+if (User exists?) then (Yes)
+  |Backend|
+  :Generate JWT;
+  :Return 200 OK;
+  |Frontend|
+  :Show dashboard;
+  |User|
+  :Logged in;
+else (No)
+  |Database|
+  :Create new user;
+  |Backend|
+  :Generate JWT;
+  :Return 201 Created;
+  |Frontend|
+  :Show success;
+  |User|
+  :Logged in;
+endif
+|User|
+stop
+
+' ========== EMAIL LOGIN ==========
+|User|
+start
+:Access login page;
+|Frontend|
+:Show email login form;
+|User|
+:Enter email/password;
+|Frontend|
+:POST /api/v1/auth/login;
+|Backend|
+:Validate credentials;
+|Database|
+if (Valid?) then (Yes)
+  |Backend|
+  :Generate JWT;
+  :Return 200 OK;
+  |Frontend|
+  :Show dashboard;
+  |User|
+  :Logged in;
+else (No)
+  |Backend|
+  :Return 401 Unauthorized;
+  |Frontend|
+  :Show error;
+endif
+|User|
+stop
+@enduml
