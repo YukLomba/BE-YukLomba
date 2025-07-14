@@ -1,0 +1,61 @@
+@startuml YukLomba ERD
+
+skinparam class {
+    BackgroundColor<<Entity>> #FFEBCD
+    ArrowColor #444444
+    BorderColor #444444
+}
+
+' ===== Entities =====
+class User <<Entity>> {
+    + id: uuid <<PK>>
+    + username: string
+    + email: string
+    + password: string
+    + role: string
+    + university: string
+    + interests: string
+    + password_changed_at: time.Time
+    + created_at: time.Time
+    + updated_at: time.Time
+    + organization_id: uuid <<FK>>
+}
+
+class Organization <<Entity>> {
+    + id: uuid <<PK>>
+    + name: string
+    + logo: string
+    + description: string
+    + created_at: time.Time
+    + updated_at: time.Time
+}
+
+class Competition <<Entity>> {
+    + id: uuid <<PK>>
+    + title: string
+    + type: string
+    + description: string
+    + image: []string
+    + organizer_id: uuid <<FK>>
+    + deadline: time.Time
+    + category: string
+    + event_link: string
+    + results: string
+    + created_at: time.Time
+    + updated_at: time.Time
+}
+
+class Registration <<Entity>> {
+    + user_id: uuid <<PK, FK>>
+    + competition_id: uuid <<PK, FK>>
+    + created_at: time.Time
+    + updated_at: time.Time
+}
+
+' ===== Relationships =====
+User "1" -- "0..*" Registration
+Competition "1" -- "0..*" Registration
+Organization "1" -- "0..*" Competition
+User "0..1" -- "1" Organization : belongs to >
+
+@enduml

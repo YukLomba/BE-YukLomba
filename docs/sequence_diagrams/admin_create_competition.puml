@@ -1,0 +1,16 @@
+@startuml Create Competition Sequence
+
+actor Organizer
+participant "Competition Controller" as CC
+participant "Competition Service" as CS
+participant "Competition Repository" as CR
+
+Organizer -> CC: POST /competitions (competition data)
+CC -> CS: CreateCompetition(authInfo, competition)
+CS -> CS: Validate deadline
+CS -> CR: Create(competition)
+CR --> CS: Created competition
+CS --> CC: Success response
+CC --> Organizer: 201 Created + competition data
+
+@enduml

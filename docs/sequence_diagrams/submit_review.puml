@@ -1,22 +1,20 @@
-@startuml
-participant Client
-participant CompetitionController
-participant CompetitionService
-participant ReviewRepository
+@startuml Submit Review
+
+actor User
+participant Frontend
+participant Backend
 participant Database
 
-Client -> CompetitionController: POST /api/v1/competitions/{id}/reviews
-CompetitionController -> CompetitionService: SubmitReview(authInfo, reviewData)
-CompetitionService -> Database: Verify user registration
+User -> Frontend: Submit review
+Frontend -> Backend: POST /api/competitions/{id}/reviews
+Backend -> Database: Verify registration
 alt Not registered
-  CompetitionService --> CompetitionController: Error
-  CompetitionController --> Client: 403 Forbidden
+  Backend --> Frontend: 403 Forbidden
+  Frontend --> User: Show error
 else
-  CompetitionService -> ReviewRepository: Create(review)
-  ReviewRepository -> Database: Save review
-  Database --> ReviewRepository: Review created
-  ReviewRepository --> CompetitionService: Success
-  CompetitionService --> CompetitionController: Review data
-  CompetitionController --> Client: 201 Created
+  Backend -> Database: Save review
+  Database --> Backend: Review saved
+  Backend --> Frontend: 201 Created
+  Frontend --> User: Show success
 end
 @enduml

@@ -1,23 +1,20 @@
-@startuml
-participant Client
-participant AnalyticsController
-participant AnalyticsService
-participant CompetitionRepository
-participant ReviewRepository
+@startuml Get Competition Analytics
+
+actor Admin
+participant Frontend
+participant Backend
 participant Database
 
-Client -> AnalyticsController: GET /api/v1/competitions/{id}/analytics
-AnalyticsController -> AnalyticsService: GetCompetitionAnalytics(compID)
-AnalyticsService -> CompetitionRepository: FindByID(compID)
-CompetitionRepository -> Database: Query competition
-Database --> CompetitionRepository: Competition data
-AnalyticsService -> CompetitionRepository: CountRegistrations(compID)
-CompetitionRepository -> Database: Query count
-Database --> CompetitionRepository: Registration count
-AnalyticsService -> ReviewRepository: GetByCompetition(compID)
-ReviewRepository -> Database: Query reviews
-Database --> ReviewRepository: Reviews list
-AnalyticsService -> AnalyticsService: Calculate average rating
-AnalyticsService --> AnalyticsController: Analytics data
-AnalyticsController --> Client: 200 OK with analytics
+Admin -> Frontend: View competition analytics
+Frontend -> Backend: GET /api/v1/competitions/{id}/analytics
+Backend -> Database: Query competition data
+Database --> Backend: Competition details
+Backend -> Database: Query registration count
+Database --> Backend: Registration count
+Backend -> Database: Query reviews
+Database --> Backend: Reviews data
+Backend -> Backend: Calculate analytics
+Backend --> Frontend: Analytics response
+Frontend --> Admin: Display analytics
+
 @enduml

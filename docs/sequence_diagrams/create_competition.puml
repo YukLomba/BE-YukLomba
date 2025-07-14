@@ -1,19 +1,19 @@
-@startuml
-participant Client
-participant CompetitionController
-participant CompetitionService
+@startuml Create Competition Sequence
+actor Organizer
+participant Frontend
+participant Backend
 participant Database
 
-Client -> CompetitionController: POST /api/v1/competitions
-CompetitionController -> CompetitionService: CreateCompetition(authInfo, compData)
-CompetitionService -> Database: Validate organizer
-alt Valid organizer
-  CompetitionService -> Database: Save competition
-  Database --> CompetitionService: Competition created
-  CompetitionService --> CompetitionController: Success
-  CompetitionController --> Client: 201 Created
-else Invalid organizer
-  CompetitionService --> CompetitionController: Error
-  CompetitionController --> Client: 403 Forbidden
+Organizer -> Frontend: Fill competition form
+Frontend -> Backend: POST /api/competitions
+Backend -> Backend: Validate organizer role
+alt Not organizer
+    Backend --> Frontend: Error response
+    Frontend --> Organizer: Show error
+else Valid organizer
+    Backend -> Database: Create competition
+    Database --> Backend: Created competition
+    Backend --> Frontend: Success response
+    Frontend --> Organizer: Show success and redirect
 end
 @enduml

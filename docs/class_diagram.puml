@@ -1,136 +1,126 @@
-@startuml
-skinparam classFontSize 15
-skinparam classAttributeIconSize 0
+@startuml YukLomba Class Diagram
 
-' ********** ENTITIES **********
-class User {
-  -id: UUID
-  -username: String
-  -email: String
-  -password: String
-  -role: String
-  -university: String
-  -interests: String
-  -organization_id: UUID
-  -created_at: DateTime
-  -updated_at: DateTime
+skinparam class {
+    BackgroundColor<<Controller>> #FFCCCC
+    BackgroundColor<<Service>> #CCFFCC
+    BackgroundColor<<Repository>> #CCCCFF
+    ArrowColor #444444
+    BorderColor #444444
 }
 
-class Competition {
-  -id: UUID
-  -title: String
-  -type: String
-  -description: Text
-  -image: String[]
-  -deadline: DateTime
-  -category: String
-  -eventLink: String
-  -results: String
-  -organizer_id: UUID
+' ===== Controllers =====
+package "Controllers" {
+class AuthController <<Controller>> {
+    + Register(c *fiber.ctx)
+    + Login(c *fiber.ctx)
+    + GoogleOAuth(c *fiber.ctx)
+    + GoogleCallback(c *fiber.ctx)
+    + ValidateToken(c *fiber.ctx)
+    + CompleteRegistration(c *fiber.ctx)
 }
 
-class Organization {
-  -id: UUID
-  -name: String
-  -logo: String
-  -description: Text
-  -created_at: DateTime
-  -updated_at: DateTime
+class CompetitionController <<Controller>> {
+    + GetCompetition(c *fiber.ctx)
+    + GetAllCompetitions(c *fiber.ctx)
+    + CreateCompetition(c *fiber.ctx)
+    + UpdateCompetition(c *fiber.ctx)
+    + DeleteCompetition(c *fiber.ctx)
+    + RegisterToCompetition(c *fiber.ctx)
+    + GetCompetitionRegistrants(c *fiber.ctx)
 }
 
-class Registration {
-  -user_id: UUID
-  -competition_id: UUID
-  -created_at: DateTime
+class OrganizationController <<Controller>> {
+    + GetOrganization(c *fiber.ctx)
+    + GetAllOrganizations(c *fiber.ctx)
+    + CreateOrganization(c *fiber.ctx)
+    + UpdateOrganization(c *fiber.ctx)
+    + DeleteOrganization(c *fiber.ctx)
 }
 
-class Review {
-  -id: UUID
-  -user_id: UUID
-  -competition_id: UUID
-  -rating: Integer
-  -comment: Text
-  -created_at: DateTime
-  -updated_at: DateTime
+class UserController <<Controller>> {
+    + GetUser(c *fiber.ctx)
+    + GetAllUsers(c *fiber.ctx)
+    + UpdateUser(c *fiber.ctx)
+    + GetUserRegistrations(c *fiber.ctx)
+}
+}
+package "Services" {
+' ===== Services =====
+class AuthService <<Service>> {
+    + Register(req *dto.RegisterRequest) (*entity.User, error)
+    + Login(req *dto.LoginRequest) (*dto.TokenResponse, error)
+    + GetGoogleOauthUrl() (string, error)
+    + SignInWithGoogle(code string, state string) (*dto.TokenResponse, error)
+    + ValidateToken(token string) (*util.JWTClaims, error)
+    + CompleteRegistration(userID uuid.UUID, role string) (*entity.User, error)
 }
 
-' ********** SERVICES **********
-class AuthService {
-  +Register(dto.RegisterRequest): (*entity.User, error)
-  +Login(dto.LoginRequest): (*dto.TokenResponse, error)
-  +GetGoogleOauthUrl(): (string, error)
-  +SignInWithGoogle(string): (*dto.TokenResponse, error)
-  +ValidateToken(string): (*util.JWTClaims, error)
-  +CompleteRegistration(uuid.UUID, string): (*entity.User, error)
+class CompetitionService <<Service>> {
+    + GetCompetition(id uuid.UUID) (*entity.Competition, error)
+    + GetAllCompetitions(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
+    + CreateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error
+    + UpdateCompetition(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error
+    + DeleteCompetition(authInfo *dto.AuthInfo, id uuid.UUID) error
+    + RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
+    + GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error)
 }
 
-class CompetitionService {
-  +CreateCompetition(*dto.AuthInfo, *entity.Competition): error
-  +GetCompetition(uuid.UUID): (*entity.Competition, error)
-  +UpdateCompetition(*dto.AuthInfo, uuid.UUID, *map[string]interface{}): error
-  +DeleteCompetition(*dto.AuthInfo, uuid.UUID): error
-  +RegisterUserToCompetition(*dto.AuthInfo, uuid.UUID): error
+class OrganizationService <<Service>> {
+    + GetOrganization(id uuid.UUID) (*entity.Organization, error)
+    + GetAllOrganizations() ([]*entity.Organization, error)
+    + CreateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
+    + UpdateOrganization(org *entity.Organization, authInfo *dto.AuthInfo) error
+    + DeleteOrganization(id uuid.UUID, authInfo *dto.AuthInfo) error
 }
 
-class OrganizationService {
-  +CreateOrganization(*entity.Organization, *dto.AuthInfo): error
-  +UpdateOrganization(*entity.Organization, *dto.AuthInfo): error
-  +DeleteOrganization(uuid.UUID, *dto.AuthInfo): error
+class UserService <<Service>> {
+    + GetUser(id uuid.UUID) (*entity.User, error)
+    + GetAllUsers() ([]*entity.User, error)
+    + UpdateUser(id uuid.UUID, data *map[string]interface{}) error
+    + GetAllUserRegistration(id uuid.UUID) ([]*entity.Registration, error)
+}
+}
+' ===== Repositories =====
+package "Repositories" {
+interface UserRepository <<Repository>> {
+    + FindByID(id uuid.UUID) (*entity.User, error)
+    + FindByEmail(email string) (*entity.User, error)
+    + FindByUsername(username string) (*entity.User, error)
+    + FindAll() ([]*entity.User, error)
+    + Create(user *entity.User) error
+    + Update(id uuid.UUID, data *map[string]interface{}) error
+    + FindAllRegistration(userID uuid.UUID) ([]*entity.Registration, error)
 }
 
-class UserService {
-  +UpdateUser(uuid.UUID, *map[string]interface{}): error
-  +GetAllUserRegistration(uuid.UUID): ([]*entity.Registration, error)
-  +CountByRole(string): (int64, error)
+interface CompetitionRepository <<Repository>> {
+    + FindByID(id uuid.UUID) (*entity.Competition, error)
+    + FindWithFilter(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
+    + FindByOrganizerID(organizerID uuid.UUID) ([]*entity.Competition, error)
+    + Create(competition *entity.Competition) error
+    + Update(id uuid.UUID, data *map[string]interface{}) error
+    + Delete(id uuid.UUID) error
+    + FindUserRegistration(competitionID uuid.UUID, userID uuid.UUID) (*entity.Registration, error)
+    + CreateUserRegistration(registration *entity.Registration) error
 }
 
-class AnalyticsService {
-  +GetDashboard(*dto.AuthInfo): (*dto.DashboardResponse, error)
-  +GetCompetitionAnalytics(uuid.UUID): (*dto.CompetitionAnalytics, error)
+interface OrganizationRepository <<Repository>> {
+    + FindByID(id uuid.UUID) (*entity.Organization, error)
+    + FindAll() ([]*entity.Organization, error)
+    + Create(org *entity.Organization) error
+    + Update(org *entity.Organization) error
+    + Delete(id uuid.UUID) error
+}
 }
 
-' ********** REPOSITORIES **********
-interface UserRepository {
-  +FindByEmail(string): (*entity.User, error)
-  +FindByUsername(string): (*entity.User, error)
-  +Create(*entity.User): error
-  +Update(uuid.UUID, *map[string]interface{}): error
-}
+' ===== Relationships =====
+AuthController --> AuthService
+CompetitionController --> CompetitionService
+OrganizationController --> OrganizationService
+UserController --> UserService
 
-interface CompetitionRepository {
-  +FindByID(uuid.UUID): (*entity.Competition, error)
-  +Create(*entity.Competition): error
-  +Update(uuid.UUID, *map[string]interface{}): error
-  +FindByOrganizerID(uuid.UUID): ([]*entity.Competition, error)
-  +CountRegistrations(uuid.UUID): (int64, error)
-  +CountAllRegistrations(): (int64, error)
-}
+AuthService --> UserRepository
+CompetitionService --> CompetitionRepository
+OrganizationService --> OrganizationRepository
+UserService --> UserRepository
 
-interface OrganizationRepository {
-  +FindByID(uuid.UUID): (*entity.Organization, error)
-  +Create(*entity.Organization): error
-  +Update(*entity.Organization): error
-  +Delete(uuid.UUID): error
-}
-
-interface ReviewRepository {
-  +GetByCompetition(uuid.UUID): ([]*entity.Review, error)
-  +GetAverageRatingAll(): (float32, error)
-  +Create(*entity.Review): error
-}
-
-' ********** RELATIONSHIPS **********
-User "1" *-- "many" Registration
-Competition "1" *-- "many" Registration
-User "1" *-- "many" Review
-Competition "1" *-- "many" Review
-Organization "1" o-- "many" Competition
-
-AuthService ..> UserRepository : depends on
-CompetitionService ..> CompetitionRepository : depends on
-OrganizationService ..> OrganizationRepository : depends on
-UserService ..> UserRepository : depends on
-AnalyticsService ..> UserRepository : depends on
-AnalyticsService ..> CompetitionRepository : depends on
-AnalyticsService ..> ReviewRepository : depends on
 @enduml

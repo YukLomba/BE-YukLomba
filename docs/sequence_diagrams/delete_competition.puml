@@ -1,0 +1,20 @@
+@startuml Delete Competition
+
+actor Organizer
+participant Frontend
+participant Backend
+participant Database
+
+Organizer -> Frontend: Delete competition
+Frontend -> Backend: DELETE /api/v1/competitions/{id}
+Backend -> Database: Verify organizer ownership
+alt Not owner
+  Backend --> Frontend: 403 Forbidden
+  Frontend --> Organizer: Show error
+else
+  Backend -> Database: Delete competition
+  Database --> Backend: Competition deleted
+  Backend --> Frontend: 204 No Content
+  Frontend --> Organizer: Show success
+end
+@enduml

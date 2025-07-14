@@ -1,20 +1,22 @@
-@startuml
-participant Client
-participant AuthController
-participant AuthService
-participant Database
+@startuml User Registration Sequence
 
-Client -> AuthController: POST /api/v1/auth/register
-AuthController -> AuthService: Register(registerRequest)
-AuthService -> Database: Check email existence
-alt Email available
-  AuthService -> AuthService: Hash password
-  AuthService -> Database: Save user
-  Database --> AuthService: User record
-  AuthService --> AuthController: User data
-  AuthController --> Client: 201 Created
-else Email exists
-  AuthService --> AuthController: Error
-  AuthController --> Client: 409 Conflict
-end
+actor User
+participant "Auth Controller" as AC
+participant "Auth Service" as AS
+participant "User Repository" as UR
+participant "Util" as Util
+
+User -> AC: POST /register (email, password, etc)
+AC -> AS: Register(request)
+AS -> UR: FindByEmail(email)
+UR --> AS: User not found
+AS -> UR: FindByUsername(username)
+UR --> AS: User not found
+AS -> Util: HashPassword(password)
+Util --> AS: Hashed password
+AS -> UR: Create(user)
+UR --> AS: Created user
+AS --> AC: User object
+AC --> User: 201 Created + user data
+
 @enduml

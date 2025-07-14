@@ -1,0 +1,17 @@
+@startuml Complete Registration Sequence
+
+actor User
+participant "Auth Controller" as AC
+participant "Auth Service" as AS
+participant "User Repository" as UR
+
+User -> AC: PATCH /complete-registration (userID, role)
+AC -> AS: CompleteRegistration(userID, role)
+AS -> UR: FindByID(userID)
+UR --> AS: User object
+AS -> UR: Update(user, role)
+UR --> AS: Updated user
+AS --> AC: User object
+AC --> User: 200 OK + user data
+
+@enduml
