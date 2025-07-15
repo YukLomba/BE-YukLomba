@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/YukLomba/BE-YukLomba/internal/domain/dto"
@@ -20,19 +19,23 @@ var (
 	ErrCompetitionAlreadyRegistered = errors.New("user already registered to competition")
 	ErrCompetitionDeadlinePassed    = errors.New("competition deadline has passed")
 	ErrCompetitionNotRegistered     = errors.New("user not registered for competition")
+	ErrCompetitionAlreadyApproved   = errors.New("competition already approved")
 )
 
 type CompetitionService interface {
 	GetCompetition(id uuid.UUID) (*entity.Competition, error)
 	GetAllCompetitions(filter *dto.CompetitionFilter) ([]*entity.Competition, error)
 	CreateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error
-	CreateManyCompetitition(authInfo *dto.AuthInfo, competitions []*entity.Competition) (*[]string, error)
 	UpdateCompetition(authInfo *dto.AuthInfo, id uuid.UUID, data *map[string]interface{}) error
 	DeleteCompetition(authInfo *dto.AuthInfo, id uuid.UUID) error
-	RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
 	GetCompetitionsByOrganizer(organizerID uuid.UUID) ([]*entity.Competition, error)
-	SubmitReview(authInfo *dto.AuthInfo, CompetitionId uuid.UUID, review *entity.Review) error
+	RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
+	SubmitReview(authInfo *dto.AuthInfo, competitionID uuid.UUID, review *entity.Review) error
 	GetCompetitionReviews(competitionID uuid.UUID) ([]*entity.Review, error)
+	ApproveCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error
+	GetManagedCompetitions(authInfo *dto.AuthInfo) ([]*entity.Competition, error)
+	GetManagedCompetitionByID(authInfo *dto.AuthInfo, id uuid.UUID) (*entity.Competition, error)
+	GetRegisteredEventLink(authInfo *dto.AuthInfo, competitionID uuid.UUID) (string, error)
 }
 
 type CompetitionServiceImpl struct {
@@ -58,20 +61,47 @@ func (s *CompetitionServiceImpl) GetCompetition(id uuid.UUID) (*entity.Competiti
 			return nil, errs.ErrInternalServer
 		}
 	}
+	(*competition).ApprovalStatus = ""
+	(*competition).ApprovedAt = nil
+	(*competition).EventLink = ""
+	return competition, nil
+}
+
+func (s *CompetitionServiceImpl) GetManagedCompetitionByID(authInfo *dto.AuthInfo, id uuid.UUID) (*entity.Competition, error) {
+	competition, err := s.competitionRepo.FindByID(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return nil, ErrCompetitionNotFound
+		default:
+			return nil, errs.ErrInternalServer
+		}
+	}
+	if *(*authInfo).OrganizationID != competition.OrganizerID && (*authInfo).Role == "organizer" {
+		return nil, ErrCompetitionNotBelongsToOrg
+	}
 	return competition, nil
 }
 
 // GetAllCompetitions implements CompetitionService.
 func (s *CompetitionServiceImpl) GetAllCompetitions(filter *dto.CompetitionFilter) ([]*entity.Competition, error) {
+	ApprovalStatus := "approved"
+	(*filter).ApprovalStatus = &ApprovalStatus
 	competitions, err := s.competitionRepo.FindWithFilter(filter)
 	if err != nil {
 		return nil, errs.ErrInternalServer
+	}
+	for _, competition := range competitions {
+		(*competition).ApprovalStatus = ""
+		(*competition).ApprovedAt = nil
+		(*competition).EventLink = ""
 	}
 	return competitions, nil
 }
 
 // CreateCompetition implements CompetitionService.
 func (s *CompetitionServiceImpl) CreateCompetition(authInfo *dto.AuthInfo, competition *entity.Competition) error {
+	competition.ApprovalStatus = "approved"
 	if competition.Deadline.Before(time.Now()) {
 		return ErrCompetitionDeadlinePassed
 	}
@@ -81,32 +111,10 @@ func (s *CompetitionServiceImpl) CreateCompetition(authInfo *dto.AuthInfo, compe
 	// if role organizer, replace organizerID with authInfo.OrganizationID
 	if (*authInfo).Role == "organizer" {
 		competition.OrganizerID = *(*authInfo).OrganizationID
+		competition.ApprovalStatus = "pending"
 	}
+
 	return s.competitionRepo.Create(competition)
-}
-
-func (s *CompetitionServiceImpl) CreateManyCompetitition(authInfo *dto.AuthInfo, competitions []*entity.Competition) (*[]string, error) {
-	Competitions := new([]entity.Competition)
-	var notValidMessage []string
-	if authInfo.Role != "admin" {
-		return nil, errs.ErrUnauthorized
-	}
-
-	for _, comp := range competitions {
-		if comp.Deadline.Before(time.Now()) {
-			notValidMessage = append(notValidMessage, fmt.Sprintf("Deadline must be after %s for competition with title %s", time.Now().Format("2006-01-02"), comp.Title))
-			continue
-		}
-		*Competitions = append(*Competitions, *comp)
-	}
-	err := s.competitionRepo.CreateMany(Competitions)
-	if err != nil {
-		return nil, errs.ErrInternalServer
-	}
-	if len(notValidMessage) > 0 {
-		return &notValidMessage, nil
-	}
-	return nil, nil
 }
 
 // UpdateCompetition implements CompetitionService.
@@ -124,6 +132,9 @@ func (s *CompetitionServiceImpl) UpdateCompetition(authInfo *dto.AuthInfo, id uu
 	if *(*authInfo).OrganizationID != competition.OrganizerID {
 		return ErrCompetitionNotBelongsToOrg
 	}
+	if (*authInfo).Role == "organizer" && competition.ApprovalStatus == "approved" {
+		return ErrCompetitionAlreadyApproved
+	}
 
 	err = s.competitionRepo.Update(id, data)
 	if err != nil {
@@ -140,6 +151,9 @@ func (s *CompetitionServiceImpl) DeleteCompetition(authInfo *dto.AuthInfo, id uu
 	}
 	if *(*authInfo).OrganizationID != competition.OrganizerID && (*authInfo).Role == "organizer" {
 		return ErrCompetitionNotBelongsToOrg
+	}
+	if (*authInfo).Role == "organizer" && competition.ApprovalStatus == "approved" {
+		return ErrCompetitionAlreadyApproved
 	}
 	err = s.competitionRepo.Delete(id)
 	if err != nil {
@@ -199,6 +213,41 @@ func (s *CompetitionServiceImpl) GetCompetitionReviews(competitionID uuid.UUID) 
 }
 
 // RegisterUserToCompetition implements CompetitionService.
+func (s *CompetitionServiceImpl) ApproveCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error {
+	if authInfo.Role != "admin" {
+		return errs.ErrUnauthorized
+	}
+
+	_, err := s.competitionRepo.FindByID(competitionID)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return ErrCompetitionNotFound
+		default:
+			return errs.ErrInternalServer
+		}
+	}
+
+	now := time.Now()
+	data := &map[string]interface{}{
+		"approval_status": "approved",
+		"approved_at":     now,
+	}
+
+	return s.competitionRepo.Update(competitionID, data)
+}
+
+func (s *CompetitionServiceImpl) GetManagedCompetitions(authInfo *dto.AuthInfo) ([]*entity.Competition, error) {
+	if authInfo.Role == "admin" {
+		// Admins can see all competitions
+		return s.competitionRepo.FindWithFilter(nil)
+	} else if authInfo.Role == "organizer" && authInfo.OrganizationID != nil {
+		// Organizers can see their own competitions
+		return s.competitionRepo.FindByOrganizerID(*authInfo.OrganizationID)
+	}
+	return nil, errs.ErrUnauthorized
+}
+
 func (s *CompetitionServiceImpl) RegisterUserToCompetition(authInfo *dto.AuthInfo, competitionID uuid.UUID) error {
 	competition, err := s.competitionRepo.FindByID(competitionID)
 	if err != nil {
@@ -236,4 +285,24 @@ func (s *CompetitionServiceImpl) RegisterUserToCompetition(authInfo *dto.AuthInf
 		return errs.ErrInternalServer
 	}
 	return nil
+}
+
+func (s *CompetitionServiceImpl) GetRegisteredEventLink(authInfo *dto.AuthInfo, competitionID uuid.UUID) (string, error) {
+	competition, err := s.competitionRepo.FindByID(competitionID)
+	if err != nil {
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			return "", ErrCompetitionNotFound
+		default:
+			return "", errs.ErrInternalServer
+		}
+	}
+	_, err = s.competitionRepo.FindUserRegistration(competitionID, authInfo.ID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", ErrCompetitionNotRegistered
+		}
+		return "", errs.ErrInternalServer
+	}
+	return competition.EventLink, nil
 }

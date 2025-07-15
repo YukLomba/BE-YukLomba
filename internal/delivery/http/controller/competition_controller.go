@@ -39,6 +39,25 @@ func (c *CompetitionController) GetCompetition(ctx *fiber.Ctx) error {
 	return ctx.JSON(response)
 }
 
+func (c *CompetitionController) GetCompetitionEventLink(ctx *fiber.Ctx) error {
+	id, err := util.ParseCtxParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	authInfo := util.GetAuthInfo(ctx)
+
+	eventLink, err := c.competitionService.GetRegisteredEventLink(authInfo, id)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Competition not found"})
+	}
+
+	if eventLink == "" {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "You are not registered for this competition"})
+	}
+
+	return ctx.JSON(fiber.Map{"event_link": eventLink})
+}
+
 // GetAllCompetitions retrieves all competitions
 func (c *CompetitionController) GetAllCompetitions(ctx *fiber.Ctx) error {
 	filterQuery := new(dto.CompetitionFilter)
@@ -50,6 +69,24 @@ func (c *CompetitionController) GetAllCompetitions(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch competitions"})
 	}
 	response := mapper.ToCompetitionsResponse(competitions)
+	return ctx.JSON(response)
+}
+
+func (c *CompetitionController) GetManagedCompetition(ctx *fiber.Ctx) error {
+	id, err := util.ParseCtxParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	authInfo := util.GetAuthInfo(ctx)
+
+	competition, err := c.competitionService.GetManagedCompetitionByID(authInfo, id)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Competition not found"})
+	}
+
+	response := mapper.ToCompetitionResponse(competition)
+
 	return ctx.JSON(response)
 }
 
@@ -75,36 +112,8 @@ func (c *CompetitionController) CreateCompetition(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Competition created successfully"})
 }
 
-func (c *CompetitionController) CreateManyCompetitition(ctx *fiber.Ctx) error {
-	req := new(dto.MultiCompetitionCreateRequest)
-	if err := ctx.BodyParser(req); err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request body"})
-	}
-
-	if err := util.ValidateStruct(req); err != nil {
-		errors := util.GenerateValidationErrorMessage(err)
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errors})
-	}
-	authInfo := util.GetAuthInfo(ctx)
-
-	competitions := mapper.ToCompetitionsFromCreate(req.Competitions)
-
-	notValidMessage, err := c.competitionService.CreateManyCompetitition(authInfo, competitions)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create competitions"})
-	}
-	response := fiber.Map{
-		"message": "Competitions created successfully",
-	}
-	if notValidMessage != nil {
-		response["not_valid"] = *notValidMessage
-	}
-	return ctx.Status(fiber.StatusCreated).JSON(response)
-}
-
 // UpdateCompetition updates an existing competition
-func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
+func (c *CompetitionController) UpdateManagedCompetition(ctx *fiber.Ctx) error {
 	id, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -126,7 +135,7 @@ func (c *CompetitionController) UpdateCompetition(ctx *fiber.Ctx) error {
 }
 
 // DeleteCompetition deletes a competition by ID
-func (c *CompetitionController) DeleteCompetition(ctx *fiber.Ctx) error {
+func (c *CompetitionController) DeleteManagedCompetition(ctx *fiber.Ctx) error {
 	CompetitionId, err := util.ParseCtxParam(ctx, "id")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
@@ -211,4 +220,33 @@ func (c *CompetitionController) GetCompetitionReviews(ctx *fiber.Ctx) error {
 	response := mapper.ToCompetitionReviewsResponse(reviews)
 
 	return ctx.JSON(response)
+}
+
+// GetManagedCompetitions retrieves all competitions managed by the current user (organizer/admin)
+func (c *CompetitionController) GetManagedCompetitions(ctx *fiber.Ctx) error {
+	authInfo := util.GetAuthInfo(ctx)
+
+	competitions, err := c.competitionService.GetManagedCompetitions(authInfo)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to fetch managed competitions"})
+	}
+
+	response := mapper.ToCompetitionsResponse(competitions)
+	return ctx.JSON(response)
+}
+
+// ApproveCompetition approves a competition (admin only)
+func (c *CompetitionController) ApproveCompetition(ctx *fiber.Ctx) error {
+	competitionID, err := util.ParseCtxParam(ctx, "id")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid competition ID"})
+	}
+
+	authInfo := util.GetAuthInfo(ctx)
+
+	if err := c.competitionService.ApproveCompetition(authInfo, competitionID); err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to approve competition", "message": err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Competition approved successfully"})
 }

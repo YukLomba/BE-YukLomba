@@ -11,6 +11,7 @@ func Migrate(db *gorm.DB) {
 	if db == nil {
 		log.Fatal("❌ Cannot migrate: DB connection is nil")
 	}
+	db.Exec("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'approve_status') THEN CREATE TYPE approve_status AS ENUM ('pending', 'approved', 'reject'); END IF; END $$;")
 	err := db.AutoMigrate(
 		&entity.User{},
 		&entity.Competition{},

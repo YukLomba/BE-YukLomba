@@ -7,37 +7,37 @@ import (
 )
 
 func SetupCompetitionRoute(router fiber.Router, competitionController *controller.CompetitionController, authMiddleware *fiber.Handler) {
-	competitions := router.Group("/competitions")
+	// Student routes (public)
+	competition := router.Group("/competitions")
+	{
+		// Get all approved competitions
+		competition.Get("/", competitionController.GetAllCompetitions)
 
-	// public routes
-	// Get all competitions
-	competitions.Get("/", competitionController.GetAllCompetitions)
+		// Get competition details
+		competition.Get("/:id", competitionController.GetCompetition)
 
-	// Get competition by ID
-	competitions.Get("/:id", competitionController.GetCompetition)
+		// Register to competition
+		competition.Post("/:id/register", *authMiddleware, competitionController.RegisterToCompetition)
 
-	// Get competitions by organizer ID
-	competitions.Get("/organizer/:id", competitionController.GetCompetitionsByOrganizer)
+		// Competition reviews
+		competition.Get("/:id/reviews", competitionController.GetCompetitionReviews)
+		competition.Post("/:id/reviews", *authMiddleware, middleware.RoleMiddleware("student"), competitionController.SubmitReview)
+	}
 
-	competitions.Get("/:id/reviews", competitionController.GetCompetitionReviews)
+	// Management routes (protected)
+	manageRoutes := router.Group("/manage/competitions")
+	manageRoutes.Use(*authMiddleware, middleware.RoleMiddleware("admin", "organizer"))
+	{
+		// Get all managed competitions
+		manageRoutes.Get("/", competitionController.GetManagedCompetitions)
 
-	competitions.Post("/:id/reviews", *authMiddleware, middleware.RoleMiddleware("student"), competitionController.SubmitReview)
+		// CRUD operations (status will be pending)
+		manageRoutes.Post("/", competitionController.CreateCompetition)
+		manageRoutes.Get("/:id", competitionController.GetManagedCompetition)
+		manageRoutes.Put("/:id", competitionController.UpdateManagedCompetition)
+		manageRoutes.Delete("/:id", competitionController.DeleteManagedCompetition)
 
-	// Register user to competition
-	competitions.Post("/:id/register", *authMiddleware, competitionController.RegisterToCompetition)
-
-	// protected routes
-	protected := competitions.Use(*authMiddleware, middleware.RoleMiddleware("admin", "organizer"))
-
-	// Create new competition
-	protected.Post("/", competitionController.CreateCompetition)
-
-	// Create multiple competitions
-	protected.Post("/multi", competitionController.CreateManyCompetitition)
-
-	// Update competition
-	protected.Put("/:id", competitionController.UpdateCompetition)
-
-	// Delete competition
-	protected.Delete("/:id", competitionController.DeleteCompetition)
+		// Admin-only approval endpoint
+		manageRoutes.Post("/:id/approve", middleware.RoleMiddleware("admin"), competitionController.ApproveCompetition)
+	}
 }

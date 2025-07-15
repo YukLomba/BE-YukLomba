@@ -94,7 +94,7 @@ func (r userRepository) FindAll() ([]*entity.User, error) {
 func (r userRepository) FindByID(id uuid.UUID) (*entity.User, error) {
 	var user entity.User
 	result := r.db.Preload("Organization").
-		Preload("JoinedCompetitions.Organizer").
+		// Preload("JoinedCompetitions.Organizer").
 		First(&user, id)
 	if result.Error != nil {
 		slog.Error("Error finding user by ID:",

@@ -19,10 +19,6 @@ type CompetitionCreateRequest struct {
 	EventLink   string          `json:"event_link" validate:"required,url"`
 }
 
-type MultiCompetitionCreateRequest struct {
-	Competitions []*CompetitionCreateRequest `json:"competitions" validate:"required,dive"`
-}
-
 // CompetitionUpdateRequest represents the data needed to update a competition
 type CompetitionUpdateRequest struct {
 	Title       *string    `json:"title" validate:"required"`
@@ -37,43 +33,42 @@ type CompetitionUpdateRequest struct {
 
 // CompetitionResponse represents the competition data returned to the client
 type CompetitionResponse struct {
-	ID          uuid.UUID         `json:"id"`
-	Title       string            `json:"title"`
-	Type        string            `json:"type"`
-	Description string            `json:"description"`
-	Image       *[]string         `json:"image"`
-	Organizer   OrganizationShort `json:"organizer"`
-	Deadline    time.Time         `json:"deadline"`
-	Category    string            `json:"category"`
-	EventLink   string            `json:"eventLink"`
-	Results     string            `json:"results"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
+	ID             uuid.UUID         `json:"id"`
+	Title          string            `json:"title"`
+	Type           string            `json:"type"`
+	Description    string            `json:"description"`
+	Image          *[]string         `json:"image"`
+	Organizer      OrganizationShort `json:"organizer"`
+	Deadline       time.Time         `json:"deadline"`
+	Category       string            `json:"category"`
+	EventLink      string            `json:"eventLink,omitzero"`
+	Results        string            `json:"results"`
+	ApprovalStatus string            `json:"approvalStatus,omitzero"`
+	ApprovedAt     *time.Time        `json:"approvedAt,omitzero"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	UpdatedAt      time.Time         `json:"updatedAt"`
 }
 
-// // CompetitionListResponse represents a list of competitions
-// type CompetitionListResponse struct {
-// 	Competitions []CompetitionResponse `json:"competitions"`
-// }
-
 type CompetitionFilter struct {
-	Title    *string    `query:"title" validate:"min=3"`
-	Type     *string    `query:"type"`
-	Category *string    `query:"category"`
-	Before   *time.Time `query:"before"` // untuk deadline sebelum tanggal tertentu
-	After    *time.Time `query:"after"`  // untuk deadline setelah tanggal tertentu
+	Title          *string `query:"title" validate:"min=3"`
+	Type           *string `query:"type"`
+	Category       *string `query:"category"`
+	ApprovalStatus *string
+	Before         *time.Time `query:"before"` // untuk deadline sebelum tanggal tertentu
+	After          *time.Time `query:"after"`  // untuk deadline setelah tanggal tertentu
 }
 
 type CompetitionShort struct {
-	ID          uuid.UUID         `json:"id"`
-	Title       string            `json:"title"`
-	Type        string            `json:"type"`
-	Organizer   OrganizationShort `json:"organization"`
-	Description string            `json:"description"`
-	Deadline    time.Time         `json:"deadline"`
-	Category    string            `json:"category"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
+	ID             uuid.UUID         `json:"id"`
+	Title          string            `json:"title"`
+	Type           string            `json:"type"`
+	Organizer      OrganizationShort `json:"organization"`
+	Description    string            `json:"description"`
+	Deadline       time.Time         `json:"deadline"`
+	Category       string            `json:"category"`
+	ApprovalStatus string            `json:"approvalStatus"`
+	CreatedAt      time.Time         `json:"createdAt"`
+	UpdatedAt      time.Time         `json:"updatedAt"`
 }
 
 type CompetititionReview struct {

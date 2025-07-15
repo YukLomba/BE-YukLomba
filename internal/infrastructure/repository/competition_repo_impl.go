@@ -121,6 +121,9 @@ func (r *competitionRepository) FindByOrganizerID(organizerID uuid.UUID) ([]*ent
 }
 func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([]*entity.Competition, error) {
 	var competitions []*entity.Competition
+	if filter != nil {
+		slog.Info("Info ", "Filter: ", *filter)
+	}
 	query := r.db.Model(&entity.Competition{})
 	if filter != nil {
 		if filter.Title != nil && *filter.Title != "" {
@@ -137,6 +140,9 @@ func (r *competitionRepository) FindWithFilter(filter *dto.CompetitionFilter) ([
 		}
 		if filter.After != nil {
 			query = query.Where("deadline >= ?", *filter.After)
+		}
+		if filter.ApprovalStatus != nil {
+			query = query.Where("approval_status = ?", *(*filter).ApprovalStatus)
 		}
 	}
 	result := query.Preload("Organizer").Find(&competitions)

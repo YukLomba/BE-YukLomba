@@ -73,8 +73,11 @@ func ToCompetitionResponse(competition *entity.Competition) *dto.CompetitionResp
 			ID:   competition.Organizer.ID,
 			Name: competition.Organizer.Name,
 		},
-		CreatedAt: competition.CreatedAt,
-		UpdatedAt: competition.UpdatedAt,
+		EventLink:      competition.EventLink,
+		ApprovalStatus: competition.ApprovalStatus,
+		ApprovedAt:     competition.ApprovedAt,
+		CreatedAt:      competition.CreatedAt,
+		UpdatedAt:      competition.UpdatedAt,
 	}
 }
 
